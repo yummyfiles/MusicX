@@ -1,4 +1,3 @@
-# MusicX
 
 <p align="center">
   <img src="MusicX_README_Banner.png" alt="MusicX Banner"/>
