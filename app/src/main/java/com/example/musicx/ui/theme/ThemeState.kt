@@ -1,0 +1,243 @@
+package com.example.musicx.ui.theme
+
+import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Color
+import kotlinx.serialization.Serializable
+
+@Immutable
+@Serializable
+data class ThemeState(
+    // Backgrounds
+    val primaryBackground: Long = 0xFF000000,
+    val secondaryBackground: Long = 0xFF000000,
+    val surface: Long = 0xFF000000,
+    val surfaceVariant: Long = 0xFF000000,
+    val cardBackground: Long = 0xFF000000,
+    val modalBackground: Long = 0xFF000000,
+    val bottomBar: Long = 0xFF000000,
+    val topBar: Long = 0xFF000000,
+    val sidebarBackground: Long = 0xFF000000,
+    val drawerBackground: Long = 0xFF000000,
+
+    // Text
+    val primaryText: Long = 0xFFFFFFFF,
+    val secondaryText: Long = 0xFFB0B0B0,
+    val tertiaryText: Long = 0xFF808080,
+    val disabledText: Long = 0xFF606060,
+    val inverseText: Long = 0xFF000000,
+
+    // Borders
+    val primaryBorder: Long = 0xFFFFFFFF,
+    val secondaryBorder: Long = 0xFF404040,
+    val divider: Long = 0xFF202020,
+    val outline: Long = 0xFFFFFFFF,
+    val outlineVariant: Long = 0xFF404040,
+
+    // Accents
+    val primaryAccent: Long = 0xFFFFFFFF,
+    val secondaryAccent: Long = 0xFFE0E0E0,
+    val mutedAccent: Long = 0xFF808080,
+    val activeAccent: Long = 0xFFFFFFFF,
+    val inactiveAccent: Long = 0xFF404040,
+
+    // Buttons
+    val buttonBackground: Long = 0xFFFFFFFF,
+    val buttonOutline: Long = 0xFFFFFFFF,
+    val buttonHover: Long = 0xFFE0E0E0,
+    val buttonPressed: Long = 0xFFC0C0C0,
+    val buttonDisabled: Long = 0xFF404040,
+    val buttonText: Long = 0xFF000000,
+
+    // Icons
+    val iconPrimary: Long = 0xFFFFFFFF,
+    val iconSecondary: Long = 0xFFB0B0B0,
+    val iconDisabled: Long = 0xFF404040,
+    val iconActive: Long = 0xFFFFFFFF,
+
+    // Sliders & Progress
+    val sliderActive: Long = 0xFFFFFFFF,
+    val sliderInactive: Long = 0xFF404040,
+    val sliderThumb: Long = 0xFFFFFFFF,
+    val progressBar: Long = 0xFFFFFFFF,
+    val progressBackground: Long = 0xFF404040,
+
+    // Toggles
+    val toggleActive: Long = 0xFFFFFFFF,
+    val toggleInactive: Long = 0xFF404040,
+    val toggleThumb: Long = 0xFFFFFFFF,
+
+    // Inputs
+    val inputBackground: Long = 0xFF121212,
+    val inputBorder: Long = 0xFF404040,
+    val inputFocusedBorder: Long = 0xFFFFFFFF,
+    val inputText: Long = 0xFFFFFFFF,
+    val inputHint: Long = 0xFF808080,
+
+    // Components
+    val scrollbar: Long = 0xFF404040,
+    val scrollbarThumb: Long = 0xFF808080,
+    val playButton: Long = 0xFFFFFFFF,
+    val pauseButton: Long = 0xFFFFFFFF,
+    val nextButton: Long = 0xFFFFFFFF,
+    val previousButton: Long = 0xFFFFFFFF,
+    val shuffleActive: Long = 0xFFFFFFFF,
+    val repeatActive: Long = 0xFFFFFFFF,
+
+    // Misc
+    val notificationBackground: Long = 0xFF000000,
+    val notificationText: Long = 0xFFFFFFFF,
+    val splashBackground: Long = 0xFF000000,
+    val appIcon: Long = 0xFFFFFFFF,
+    val splashLogo: Long = 0xFFFFFFFF,
+    val albumPlaceholder: Long = 0xFF121212,
+    val lyricsActive: Long = 0xFFFFFFFF,
+    val lyricsInactive: Long = 0xFF808080,
+    val navActive: Long = 0xFFFFFFFF,
+    val navInactive: Long = 0xFF808080
+)
+
+@Immutable
+@Serializable
+data class CustomTheme(
+    val name: String,
+    val state: ThemeState
+)
+
+fun ThemeState.toComposeColors() = MusicXColors(
+    primaryBackground = Color(primaryBackground),
+    secondaryBackground = Color(secondaryBackground),
+    surface = Color(surface),
+    surfaceVariant = Color(surfaceVariant),
+    cardBackground = Color(cardBackground),
+    modalBackground = Color(modalBackground),
+    bottomBar = Color(bottomBar),
+    topBar = Color(topBar),
+    sidebarBackground = Color(sidebarBackground),
+    drawerBackground = Color(drawerBackground),
+    primaryText = Color(primaryText),
+    secondaryText = Color(secondaryText),
+    tertiaryText = Color(tertiaryText),
+    disabledText = Color(disabledText),
+    inverseText = Color(inverseText),
+    primaryBorder = Color(primaryBorder),
+    secondaryBorder = Color(secondaryBorder),
+    divider = Color(divider),
+    outline = Color(outline),
+    outlineVariant = Color(outlineVariant),
+    primaryAccent = Color(primaryAccent),
+    secondaryAccent = Color(secondaryAccent),
+    mutedAccent = Color(mutedAccent),
+    activeAccent = Color(activeAccent),
+    inactiveAccent = Color(inactiveAccent),
+    buttonBackground = Color(buttonBackground),
+    buttonOutline = Color(buttonOutline),
+    buttonHover = Color(buttonHover),
+    buttonPressed = Color(buttonPressed),
+    buttonDisabled = Color(buttonDisabled),
+    buttonText = Color(buttonText),
+    iconPrimary = Color(iconPrimary),
+    iconSecondary = Color(iconSecondary),
+    iconDisabled = Color(iconDisabled),
+    iconActive = Color(iconActive),
+    sliderActive = Color(sliderActive),
+    sliderInactive = Color(sliderInactive),
+    sliderThumb = Color(sliderThumb),
+    progressBar = Color(progressBar),
+    progressBackground = Color(progressBackground),
+    toggleActive = Color(toggleActive),
+    toggleInactive = Color(toggleInactive),
+    toggleThumb = Color(toggleThumb),
+    inputBackground = Color(inputBackground),
+    inputBorder = Color(inputBorder),
+    inputFocusedBorder = Color(inputFocusedBorder),
+    inputText = Color(inputText),
+    inputHint = Color(inputHint),
+    scrollbar = Color(scrollbar),
+    scrollbarThumb = Color(scrollbarThumb),
+    playButton = Color(playButton),
+    pauseButton = Color(pauseButton),
+    nextButton = Color(nextButton),
+    previousButton = Color(previousButton),
+    shuffleActive = Color(shuffleActive),
+    repeatActive = Color(repeatActive),
+    notificationBackground = Color(notificationBackground),
+    notificationText = Color(notificationText),
+    splashBackground = Color(splashBackground),
+    appIcon = Color(appIcon),
+    splashLogo = Color(splashLogo),
+    albumPlaceholder = Color(albumPlaceholder),
+    lyricsActive = Color(lyricsActive),
+    lyricsInactive = Color(lyricsInactive),
+    navActive = Color(navActive),
+    navInactive = Color(navInactive)
+)
+
+@Immutable
+data class MusicXColors(
+    val primaryBackground: Color,
+    val secondaryBackground: Color,
+    val surface: Color,
+    val surfaceVariant: Color,
+    val cardBackground: Color,
+    val modalBackground: Color,
+    val bottomBar: Color,
+    val topBar: Color,
+    val sidebarBackground: Color,
+    val drawerBackground: Color,
+    val primaryText: Color,
+    val secondaryText: Color,
+    val tertiaryText: Color,
+    val disabledText: Color,
+    val inverseText: Color,
+    val primaryBorder: Color,
+    val secondaryBorder: Color,
+    val divider: Color,
+    val outline: Color,
+    val outlineVariant: Color,
+    val primaryAccent: Color,
+    val secondaryAccent: Color,
+    val mutedAccent: Color,
+    val activeAccent: Color,
+    val inactiveAccent: Color,
+    val buttonBackground: Color,
+    val buttonOutline: Color,
+    val buttonHover: Color,
+    val buttonPressed: Color,
+    val buttonDisabled: Color,
+    val buttonText: Color,
+    val iconPrimary: Color,
+    val iconSecondary: Color,
+    val iconDisabled: Color,
+    val iconActive: Color,
+    val sliderActive: Color,
+    val sliderInactive: Color,
+    val sliderThumb: Color,
+    val progressBar: Color,
+    val progressBackground: Color,
+    val toggleActive: Color,
+    val toggleInactive: Color,
+    val toggleThumb: Color,
+    val inputBackground: Color,
+    val inputBorder: Color,
+    val inputFocusedBorder: Color,
+    val inputText: Color,
+    val inputHint: Color,
+    val scrollbar: Color,
+    val scrollbarThumb: Color,
+    val playButton: Color,
+    val pauseButton: Color,
+    val nextButton: Color,
+    val previousButton: Color,
+    val shuffleActive: Color,
+    val repeatActive: Color,
+    val notificationBackground: Color,
+    val notificationText: Color,
+    val splashBackground: Color,
+    val appIcon: Color,
+    val splashLogo: Color,
+    val albumPlaceholder: Color,
+    val lyricsActive: Color,
+    val lyricsInactive: Color,
+    val navActive: Color,
+    val navInactive: Color
+)
