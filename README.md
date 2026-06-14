@@ -6,14 +6,9 @@
 
 <img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1500&color=FFFFFF&center=true&vCenter=true&width=800&lines=MusicX;Offline+Music+Player;No+Ads;No+Subscriptions;No+Premium+Features;Just+Your+Music" />
 
-<br><br>
-
-<img src="https://img.shields.io/badge/STATUS-IN_DEVELOPMENT-black?style=for-the-badge&logo=github&logoColor=white">
-<img src="https://img.shields.io/badge/ANDROID-APP-white?style=for-the-badge&logo=android&logoColor=black">
-<img src="https://img.shields.io/badge/KOTLIN-BUILT-white?style=for-the-badge&logo=kotlin&logoColor=black">
-<img src="https://img.shields.io/badge/JETPACK-COMPOSE-black?style=for-the-badge&logo=jetpackcompose&logoColor=white">
-
-</div>
+<a href="https://github.com/yummyfiles/MusicX/releases/latest/download/MusicX.apk">
+  <img src="https://img.shields.io/badge/DOWNLOAD-APK-white?style=for-the-badge&logo=android&logoColor=black" alt="Download APK">
+</a>
 
 <br>
 
