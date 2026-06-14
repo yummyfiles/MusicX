@@ -6,7 +6,7 @@
 
 <img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1500&color=FFFFFF&center=true&vCenter=true&width=800&lines=MusicX;Offline+Music+Player;No+Ads;No+Subscriptions;No+Premium+Features;Just+Your+Music" />
 
-<a href="https://github.com/yummyfiles/MusicX/releases/latest/download/MusicX.apk">
+<a href="https://github.com/yummyfiles/MusicX/releases/download/v0.1.0-alpha/MusicX-v1.0.apk">
   <img src="https://img.shields.io/badge/DOWNLOAD-APK-white?style=for-the-badge&logo=android&logoColor=black">
 </a>
 
