@@ -7,290 +7,142 @@
 <img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1500&color=FFFFFF&center=true&vCenter=true&width=800&lines=MusicX;Offline+Music+Player;No+Ads;No+Subscriptions;No+Premium+Features;Just+Your+Music" />
 
 <a href="https://github.com/yummyfiles/MusicX/releases/latest/download/MusicX.apk">
-  <img src="https://img.shields.io/badge/DOWNLOAD-APK-white?style=for-the-badge&logo=android&logoColor=black" alt="Download APK">
+  <img src="https://img.shields.io/badge/DOWNLOAD-APK-white?style=for-the-badge&logo=android&logoColor=black">
 </a>
 
-<br>
+<br><br>
 
-<h1 align="center">🎵 MusicX</h1>
+# 🎵 MusicX
 
-<h3 align="center">
-Fast • Offline • Free
-</h3>
+### Offline Music Player for Android
 
-<p align="center">
-MusicX is an Android music player focused on speed, customization, and offline listening.
-<br>
-No ads. No subscriptions. No locked features.
-</p>
-
-<br>
-
-<div align="center">
-
-## ⚡ Why MusicX?
-
-<table>
-<tr>
-<td align="center" width="25%">
-
-### 🚫
-### No Ads
-
-</td>
-
-<td align="center" width="25%">
-
-### 🔓
-### No Premium
-
-</td>
-
-<td align="center" width="25%">
-
-### 📶
-### Offline First
-
-</td>
-
-<td align="center" width="25%">
-
-### ⚡
-### Fast
-
-</td>
-</tr>
-</table>
+No ads. No subscriptions. No accounts.
+Just play your music.
 
 </div>
 
 ---
 
-<div align="center">
+## Why I Made MusicX
 
-## 🚀 Features
+I got tired of music apps stuffing everything behind subscriptions, ads, and features nobody asked for.
 
-<table>
-<tr>
+MusicX is built around one idea:
 
-<td width="50%" valign="top">
+**Your music should stay yours.**
 
-### Current
+Import your songs, organize your library, make playlists, and listen offline without getting nagged to upgrade.
 
-- Offline Playback
-- Local Library
-- Playlists
-- Search
-- Theme Customization
-- Import Music
-- Media Controls
+---
 
-</td>
+## Features
 
-<td width="50%" valign="top">
+### Available
+
+- 🎵 Offline Playback
+- 📂 Local Music Library
+- 🔍 Search
+- 📑 Playlists
+- 🎨 Theme Customization
+- 📥 Music Importing
+- 🎧 Background Playback
+- 🔔 Media Controls
 
 ### Planned
 
-- Lyrics Support
-- Animated Splash Screen
-- Folder Management
-- Duplicate Detection
-- Audio Enhancements
-- More Customization
-
-</td>
-
-</tr>
-</table>
-
-</div>
+- 📝 Lyrics Support
+- ✨ Animated Splash Screen
+- 📁 Better Folder Management
+- 🔎 Duplicate Song Detection
+- 🎚 Audio Enhancements
+- 🎨 More Customization Options
 
 ---
 
-<div align="center">
+## Current Progress
 
-## 📊 Development Progress
-
-</div>
-
-### Playback System
-
-<progress value="100" max="100"></progress>
-
-### Navigation
-
-<progress value="100" max="100"></progress>
-
-### Settings UI
-
-<progress value="90" max="100"></progress>
-
-### Theme Engine
-
-<progress value="90" max="100"></progress>
-
-### Library Scanner
-
-<progress value="80" max="100"></progress>
-
-### Playlists
-
-<progress value="70" max="100"></progress>
-
-### Search
-
-<progress value="70" max="100"></progress>
-
-### Splash Animation
-
-<progress value="50" max="100"></progress>
+| Component | Status |
+|-----------|----------|
+| Playback System | ✅ Complete |
+| Navigation | ✅ Complete |
+| Settings UI | 🚧 In Progress |
+| Theme Engine | 🚧 In Progress |
+| Library Scanner | 🚧 In Progress |
+| Playlists | 🚧 In Progress |
+| Search | 🚧 In Progress |
+| Splash Animation | ⏳ Planned |
 
 ---
 
+## Tech Stack
+
 <div align="center">
-
-## 🛠 Tech Stack
-
-<br>
 
 <img src="https://skillicons.dev/icons?i=kotlin,androidstudio,git,github" />
 
 </div>
 
-<br>
+| Category | Technology |
+|-----------|-----------|
+| Language | Kotlin |
+| UI | Jetpack Compose |
+| Architecture | MVVM |
+| Storage | DataStore |
+| Database | Room |
+| Playback | Media3 |
 
-<table>
-<tr>
-<td>
+---
 
-### Language
+## What MusicX Is
 
-Kotlin
+✅ Offline First
 
-</td>
-<td>
+✅ Fast
 
-### UI
+✅ Lightweight
 
-Jetpack Compose
+✅ Customizable
 
-</td>
-<td>
+✅ Free
 
-### Architecture
+✅ No Ads
 
-MVVM
+---
 
-</td>
-</tr>
+## What MusicX Isn't
 
-<tr>
-<td>
+❌ Streaming Service
 
-### Storage
+❌ Subscription App
 
-DataStore
+❌ Account Required
 
-</td>
-<td>
+❌ Filled With Popups
 
-### Database
+❌ Paywalled Features
 
-Room
+---
 
-</td>
-<td>
+## Roadmap
 
-### Playback
-
-Media3
-
-</td>
-</tr>
-</table>
+- [x] Core Navigation
+- [x] Settings System
+- [x] Theme Engine
+- [ ] Library Scanner
+- [ ] Playlists
+- [ ] Search
+- [ ] Splash Animation
+- [ ] Public Beta
 
 ---
 
 <div align="center">
 
-## 🎨 Design Philosophy
+## 🎵 MusicX
 
-</div>
+Offline Music.
 
-<table>
-<tr>
-<td width="50%">
-
-### ✅ MusicX
-
-- Pure Black UI
-- White Text
-- Minimal Layout
-- Fast Performance
-- User Customization
-
-</td>
-
-<td width="50%">
-
-### ❌ Not MusicX
-
-- Ads
-- Paywalls
-- Clutter
-- Forced Accounts
-- Premium Features
-
-</td>
-</tr>
-</table>
-
----
-
-<details>
-
-<summary><b>📂 Project Goals</b></summary>
-
-<br>
-
-- Build a modern offline music player
-- Keep every feature free
-- Focus on speed
-- Focus on reliability
-- Allow deep customization
-- Never require subscriptions
-
-</details>
-
----
-
-<div align="center">
-
-## 📅 Roadmap
-
-| Status | Feature |
-|----------|----------|
-| ✅ | Core Navigation |
-| ✅ | Settings System |
-| ✅ | Theme Engine |
-| 🚧 | Library Scanner |
-| 🚧 | Playlists |
-| 🚧 | Search |
-| ⏳ | Splash Animation |
-| ⏳ | Public Beta |
-
-</div>
-
----
-
-<div align="center">
-
-<h2>🎵 MusicX</h2>
-
-<p>
-Offline Music.<br>
-No Nonsense.
-</p>
+Nothing Extra.
 
 <img src="https://capsule-render.vercel.app/api?type=waving&height=120&color=000000&section=footer"/>
 
