@@ -12,11 +12,11 @@
 
 <br><br>
 
-# 🎵 MusicX
+#  MusicX
 
 ### Offline Music Player for Android
 
-No ads. No subscriptions. No accounts.
+No ads • No subscriptions • No accounts.
 Just play your music.
 
 </div>
@@ -39,23 +39,23 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 ### Available
 
-- 🎵 Offline Playback
-- 📂 Local Music Library
-- 🔍 Search
-- 📑 Playlists
-- 🎨 Theme Customization
-- 📥 Music Importing
-- 🎧 Background Playback
-- 🔔 Media Controls
+-  Offline Playback
+-  Local Music Library
+-  Search
+-  Playlists
+-  Theme Customization
+-  Music Importing
+-  Background Playback
+-  Media Controls
 
 ### Planned
 
-- 📝 Lyrics Support
-- ✨ Animated Splash Screen
-- 📁 Better Folder Management
-- 🔎 Duplicate Song Detection
-- 🎚 Audio Enhancements
-- 🎨 More Customization Options
+-  Lyrics Support
+-  Animated Splash Screen
+-  Better Folder Management
+-  Duplicate Song Detection
+-  Audio Enhancements
+-  More Customization Options
 
 ---
 
@@ -138,12 +138,8 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 <div align="center">
 
-## 🎵 MusicX
+##  MusicX
 
 Offline Music.
 
 Nothing Extra.
-
-<img src="https://capsule-render.vercel.app/api?type=waving&height=120&color=000000&section=footer"/>
-
-</div>
