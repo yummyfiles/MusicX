@@ -128,11 +128,11 @@ Import your songs, organize your library, make playlists, and listen offline wit
 - [x] Core Navigation
 - [x] Settings System
 - [x] Theme Engine
-- [ ] Library Scanner
-- [ ] Playlists
-- [ ] Search
-- [ ] Splash Animation
-- [ ] Public Beta
+- [x] Library Scanner
+- [x] Playlists
+- [x] Search
+- [x] Splash Animation
+- [x] Public Beta
 
 ---
 
