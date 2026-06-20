@@ -131,3 +131,5 @@ Import your songs, organize your library, make playlists, and listen offline wit
 Offline Music.
 
 Nothing Extra.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z5Z521S7ER)
