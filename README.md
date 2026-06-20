@@ -123,18 +123,6 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 ---
 
-## Roadmap
-
-- [x] Core Navigation
-- [x] Settings System
-- [x] Theme Engine
-- [x] Library Scanner
-- [x] Playlists
-- [x] Search
-- [x] Splash Animation
-- [x] Public Beta
-
----
 
 <div align="center">
 
