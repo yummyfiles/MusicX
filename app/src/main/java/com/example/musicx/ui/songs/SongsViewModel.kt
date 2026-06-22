@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+// viewmodel for the songs screen - handles all the song data and user actions
+// basically the middleman between the UI and the database
 class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
 
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
@@ -21,8 +23,9 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     private var hasLoadedSongs = false
-    private var lyricsSyncJob: Job? = null
+    private var lyricsSyncJob: Job? = null // track the lyrics sync job so we can cancel duplicates
 
+    // selection mode stuff for multi-select delete
     private val _selectedSongUris = MutableStateFlow<Set<String>>(emptySet())
     val selectedSongUris: StateFlow<Set<String>> = _selectedSongUris.asStateFlow()
 
@@ -36,10 +39,11 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
         refreshPlaylists()
     }
 
+    // toggles between selection mode and normal mode
     fun toggleSelectionMode() {
         _isSelectionMode.value = !_isSelectionMode.value
         if (!_isSelectionMode.value) {
-            _selectedSongUris.value = emptySet()
+            _selectedSongUris.value = emptySet() // clear selection when exiting
         }
     }
 
@@ -53,6 +57,7 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
         _selectedSongUris.value = current
     }
 
+    // deletes all selected songs - rip
     fun deleteSelectedSongs() {
         viewModelScope.launch {
             val uris = _selectedSongUris.value.toList()
@@ -68,16 +73,18 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
         }
     }
 
+    // loads songs from the database - this is called on app start
     fun loadSongs(forceRefresh: Boolean = false) {
-        if (hasLoadedSongs && !forceRefresh) return
-        if (_isLoading.value) return
+        if (hasLoadedSongs && !forceRefresh) return // already loaded, dont do it again
+        if (_isLoading.value) return // already loading, dont start another one
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 _songs.value = repository.fetchLocalSongs()
                 hasLoadedSongs = true
+                // cancel previous sync if its still running
                 lyricsSyncJob?.cancel()
-                lyricsSyncJob = launch { repository.syncAllLyrics() }
+                lyricsSyncJob = launch { repository.syncAllLyrics() } // fetch lyrics in background
             } catch (e: Exception) {
                 android.util.Log.e("SongsViewModel", "Failed to load songs", e)
             } finally {

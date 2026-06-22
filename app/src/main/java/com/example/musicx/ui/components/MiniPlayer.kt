@@ -28,6 +28,8 @@ import coil.request.ImageRequest
 import com.example.musicx.ui.theme.MusicXTheme
 import kotlinx.coroutines.delay
 
+// the little player bar at the bottom - shows whats playing
+// tbh this was way harder to make than it looks
 @Composable
 fun MiniPlayer(
     mediaController: MediaController?,
@@ -39,6 +41,7 @@ fun MiniPlayer(
     var artistName by remember { mutableStateOf(mediaController?.currentMediaItem?.mediaMetadata?.artist?.toString() ?: "Tap to select a song") }
     var albumArtUri by remember { mutableStateOf(mediaController?.currentMediaItem?.mediaMetadata?.artworkUri) }
     
+    // progress bar stuff - need to track how far into the song we are
     var progress by remember { mutableFloatStateOf(0f) }
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -46,7 +49,8 @@ fun MiniPlayer(
         label = "SmoothProgress"
     )
     
-    // Smooth progress polling while playing
+    // this polls the position every 500ms to update the progress bar
+    // tried doing it less often but it looked janky so 500ms it is
     LaunchedEffect(isPlaying) {
         if (isPlaying && mediaController != null) {
             while (true) {
@@ -57,7 +61,7 @@ fun MiniPlayer(
         }
     }
 
-    // Initial state sync
+    // sync the initial state when song changes
     LaunchedEffect(mediaController, mediaController?.currentMediaItem?.mediaId) {
         if (mediaController != null) {
             isPlaying = mediaController.isPlaying

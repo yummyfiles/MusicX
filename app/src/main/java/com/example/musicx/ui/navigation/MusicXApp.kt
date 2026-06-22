@@ -39,6 +39,8 @@ import com.example.musicx.ui.theme.MusicXTheme
 
 import com.example.musicx.ui.metadata.MetadataEditor
 
+// main app composable - handles all the navigation and screen switching
+// this is the root of the whole UI basically
 @Composable
 fun MusicXApp(
     songsViewModel: SongsViewModel,
@@ -50,20 +52,23 @@ fun MusicXApp(
     
     val mediaController by musicController.mediaController
     
-    val isMobile = true
+    val isMobile = true // todo: detect this properly someday
 
+    // go back one screen
     fun popBackStack() {
         if (backStack.size > 1) {
             backStack.removeAt(backStack.size - 1)
         }
     }
 
+    // navigate to a top level tab - clears the backstack
     fun navigateTopLevel(destination: Destination) {
-        if (currentDestination == destination) return
+        if (currentDestination == destination) return // already here, dont do anything
         backStack.clear()
         backStack.add(destination)
     }
 
+    // play a song - builds the media item and tells the player to go
     val playSong = remember(mediaController) {
         { song: com.example.musicx.model.Song ->
             val mediaItem = MediaItem.Builder()

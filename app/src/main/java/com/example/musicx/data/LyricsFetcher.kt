@@ -9,13 +9,18 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URLEncoder
 
+// this class fetches lyrics from multiple sources on the internet
+// tried a bunch of APIs and these are the ones that actually work reliably
 class LyricsFetcher {
     companion object {
+        // shared http client - no point making a new one every time
         private val sharedClient = OkHttpClient.Builder()
             .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
             .build()
 
+        // pre-compiled regex patterns for parsing HTML and cleaning up text
+        // learned the hard way that compiling regex every time is slow af
         private val containerPattern = Regex("data-lyrics-container=\"true\">(.*?)</div>")
         private val tagStripPattern = Regex("<.*?>")
         private val oldLyricsPattern = Regex("class=\"lyrics\">(.*?)</div>", RegexOption.DOT_MATCHES_ALL)
@@ -25,29 +30,32 @@ class LyricsFetcher {
     }
 
     private val client get() = sharedClient
+    // need a real browser user agent or some sites block us
     private val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
 
+    // tries multiple sources to find lyrics - LRCLIB first for synced lyrics
+    // falls back to genius and lyrics.ovh if that fails
     suspend fun fetchLyrics(artist: String, title: String): String? = withContext(Dispatchers.IO) {
         val cleanArtist = cleanArtistName(artist)
         val cleanTitle = cleanTrackTitle(title)
 
-        // 1. Try LRCLIB (synced lyrics) first for "following" experience
+        // 1. Try LRCLIB first - has synced lyrics which is what we want
         var lyrics = tryLrcLib(cleanArtist, cleanTitle)
         if (lyrics != null) return@withContext lyrics
 
-        // 2. Try Genius (best coverage for plain text)
+        // 2. Try Genius - best coverage but usually just plain text
         lyrics = tryGeniusScrape(cleanArtist, cleanTitle)
         if (lyrics != null) return@withContext lyrics
 
-        // 3. Try Lyrics.ovh (Fallback)
+        // 3. Try Lyrics.ovh - backup option
         lyrics = tryLyricsOvh(cleanArtist, cleanTitle)
         if (lyrics != null) return@withContext lyrics
 
-        // 4. Try broader title-only search on LRCLIB
+        // 4. Try broader search on LRCLIB with just the title
         lyrics = tryLrcLib("", cleanTitle)
         if (lyrics != null) return@withContext lyrics
 
-        null
+        null // no luck finding lyrics anywhere :(
     }
 
     private fun tryLrcLib(artist: String, title: String): String? {

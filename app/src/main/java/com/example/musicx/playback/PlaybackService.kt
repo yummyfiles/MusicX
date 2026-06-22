@@ -20,6 +20,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+// this is the background service that keeps music playing even when app is closed
+// pretty cool right? took me forever to figure out tho ngl
 class PlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
@@ -33,22 +35,25 @@ class PlaybackService : MediaSessionService() {
         super.onCreate()
         settingsRepository = SettingsRepository(applicationContext)
         
+        // build the player - this is the actual thing that plays music
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(AudioAttributes.DEFAULT, true)
-            .setHandleAudioBecomingNoisy(true)
+            .setHandleAudioBecomingNoisy(true) // pauses when headphones disconnect, pretty neat
             .build()
             
-        player.volume = 1.0f
+        player.volume = 1.0f // max volume by default
         
-        setupAudioEffects(player.audioSessionId)
+        setupAudioEffects(player.audioSessionId) // bass boost go brrr
 
-        // Sync settings
+        // listen for settings changes and apply them
+        // had to put this on IO thread so it doesnt lag the whole app
         serviceScope.launch(Dispatchers.IO) {
             settingsRepository.generalSettings.collect { settings ->
                 withContext(Dispatchers.Main) { applySettings(settings) }
             }
         }
 
+        // this whole pending intent thing is so tapping the notification opens the app
         val sessionActivityPendingIntent = packageManager
             ?.getLaunchIntentForPackage(packageName)
             ?.let { sessionIntent ->
@@ -61,7 +66,7 @@ class PlaybackService : MediaSessionService() {
             }
 
         val builder = MediaSession.Builder(this, player)
-            .setId("musicx")
+            .setId("musicx") // gotta give it a name ig
         
         if (sessionActivityPendingIntent != null) {
             builder.setSessionActivity(sessionActivityPendingIntent)
@@ -70,6 +75,8 @@ class PlaybackService : MediaSessionService() {
         mediaSession = builder.build()
     }
 
+    // sets up the bass boost and surround sound effects
+    // wrapped in try catch because some devices dont support it and it crashes
     private fun setupAudioEffects(sessionId: Int) {
         try {
             bassBoost = BassBoost(0, sessionId)
@@ -80,6 +87,7 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    // applies the equalizer settings from user preferences
     private fun applySettings(settings: GeneralSettings) {
         try {
             bassBoost?.let {
@@ -99,6 +107,7 @@ class PlaybackService : MediaSessionService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
+    // cleanup when service is destroyed - gotta free up resources or memory leak bad
     override fun onDestroy() {
         mediaSession?.run {
             player.release()

@@ -25,12 +25,15 @@ import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
 
+// this is the main data class that handles all the music loading and saving
+// its basically the brain of the app when it comes to data stuff
 class MusicRepository(private val context: Context) {
 
     companion object {
         @Volatile
         private var instance: MusicDatabase? = null
 
+        // singleton pattern - only want one database instance or things get messy
         private fun getDatabase(context: Context): MusicDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -47,12 +50,15 @@ class MusicRepository(private val context: Context) {
     private val metadataOverrideDao = db.metadataOverrideDao()
     private val librarySongDao = db.librarySongDao()
     private val ignoredSongDao = db.ignoredSongDao()
-    private val lyricsFetcher = LyricsFetcher()
+    private val lyricsFetcher = LyricsFetcher() // this guy fetches lyrics from the internet
 
+    // loads all the songs from the library and mediastore
+    // this was painful to write ngl, so many edge cases
     suspend fun fetchLocalSongs(): List<Song> = withContext(Dispatchers.IO) {
         val songs = mutableListOf<Song>()
         
-        // Fetch all overrides and ignored URIs at once
+        // get all the metadata overrides and ignored songs at once
+        // way faster than querying them one by one
         val overrides = try {
             metadataOverrideDao.getAllOverrides().firstOrNull()?.associateBy { it.songUri } ?: emptyMap()
         } catch (e: Exception) {
@@ -67,7 +73,7 @@ class MusicRepository(private val context: Context) {
             emptySet()
         }
 
-        // 1. Fetch from Library (Room)
+        // first get songs from our internal library (Room database)
         val librarySongs = try {
             librarySongDao.getAllSongs().firstOrNull() ?: emptyList()
         } catch (e: Exception) {
@@ -76,9 +82,10 @@ class MusicRepository(private val context: Context) {
         }
         
         val validLibrarySongs = mutableListOf<LibrarySong>()
-        val brokenUris = mutableListOf<String>()
+        val brokenUris = mutableListOf<String>() // track broken files so we can clean them up
 
         librarySongs.forEach { libSong ->
+            // skip google docs files, they dont work for some reason
             if (libSong.uri.contains("com.google.android.apps.docs")) {
                 brokenUris.add(libSong.uri)
                 return@forEach
@@ -88,6 +95,7 @@ class MusicRepository(private val context: Context) {
 
             val uri = libSong.uri.toUri()
             
+            // check if the file actually exists
             if (libSong.uri.startsWith("file://")) {
                 val path = uri.path
                 if (path == null || !File(path).exists()) {
@@ -367,6 +375,7 @@ class MusicRepository(private val context: Context) {
         }
     }
     
+    // automatically fetch lyrics for a song - tries multiple sources
     suspend fun autoFetchLyrics(song: Song): String? = withContext(Dispatchers.IO) {
         val lyrics = lyricsFetcher.fetchLyrics(song.artist, song.title)
         if (lyrics != null) {
@@ -376,12 +385,16 @@ class MusicRepository(private val context: Context) {
         lyrics
     }
 
+    // syncs lyrics for songs that dont have them yet
+    // runs in background with up to 3 concurrent requests for speed
+    // originally did them one by one but it was SO slow
     suspend fun syncAllLyrics() = withContext(Dispatchers.IO) {
-        val missing = librarySongDao.getSongsMissingLyrics().take(20)
+        val missing = librarySongDao.getSongsMissingLyrics().take(20) // max 20 at a time
         if (missing.isEmpty()) return@withContext
         
         android.util.Log.d("MusicRepository", "Starting background lyrics sync for ${missing.size} songs")
         
+        // semaphore limits to 3 concurrent requests so we dont get rate limited
         val semaphore = kotlinx.coroutines.sync.Semaphore(3)
         missing.map { song ->
             async {

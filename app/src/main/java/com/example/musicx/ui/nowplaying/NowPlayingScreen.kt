@@ -53,6 +53,8 @@ import androidx.compose.runtime.snapshotFlow
 
 data class LyricsLine(val time: Long, val text: String)
 
+// the big now playing screen with album art and lyrics and all the controls
+// this is like the main screen of the whole app basically
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NowPlayingScreen(
@@ -63,6 +65,7 @@ fun NowPlayingScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    // all the state stuff - tracking playback position, song info etc
     var isPlaying by remember { mutableStateOf(mediaController?.isPlaying ?: false) }
     var currentPosition by remember { mutableLongStateOf(mediaController?.currentPosition?.coerceAtLeast(0L) ?: 0L) }
     var duration by remember { mutableLongStateOf(mediaController?.duration?.coerceAtLeast(0L) ?: 0L) }
@@ -75,12 +78,15 @@ fun NowPlayingScreen(
     val song = currentSong
     val lyricsText = song?.lyrics
 
+    // parse the synced lyrics if we have them
     val syncedLyrics = remember(lyricsText) {
         lyricsText?.let { parseLrc(it) } ?: emptyList()
     }
     val hasSyncedLyrics = syncedLyrics.isNotEmpty()
     val showLyricsInPlayer = generalSettings.showLyricsInPlayer
 
+    // find which lyric line is currently active based on playback position
+    // the 150ms offset makes it feel more responsive
     val activeLyricsIndex = remember {
         derivedStateOf {
             val predictionOffset = 150L
@@ -88,22 +94,26 @@ fun NowPlayingScreen(
         }
     }
 
+    // lyrics visibility state - derived so it updates automatically
     val showLyrics by remember {
         derivedStateOf { hasSyncedLyrics && showLyricsInPlayer }
     }
     var userToggledLyrics by remember { mutableStateOf(false) }
     val lyricsVisible = showLyrics || userToggledLyrics
 
+    // reset lyrics toggle when song changes
     LaunchedEffect(currentSong?.id) {
         userToggledLyrics = false
     }
 
+    // auto fetch lyrics if we dont have them yet
     LaunchedEffect(currentSong?.id) {
         if (song != null && lyricsText == null) {
             viewModel.autoFetchLyrics(song)
         }
     }
 
+    // sync state from media controller - happens when song changes
     LaunchedEffect(mediaController, mediaController?.currentMediaItem?.mediaId) {
         if (mediaController != null) {
             isPlaying = mediaController.isPlaying
@@ -112,12 +122,14 @@ fun NowPlayingScreen(
             val metadata = mediaController.currentMediaItem?.mediaMetadata
             songTitle = metadata?.title?.toString() ?: "Unknown Title"
             artistName = metadata?.artist?.toString() ?: "Unknown Artist"
-            albumArtUri = metadata?.artworkUri
+            albumArtUri = metadata.artworkUri
             repeatMode = mediaController.repeatMode
             shuffleEnabled = mediaController.shuffleModeEnabled
         }
     }
 
+    // poll position every 300ms to update progress bar and lyrics sync
+    // had to tune this a lot to get it smooth without killing battery
     LaunchedEffect(isPlaying) {
         if (isPlaying && mediaController != null) {
             while (true) {
@@ -128,6 +140,7 @@ fun NowPlayingScreen(
         }
     }
 
+    // listener for player events - this is how we know when song changes or playback state changes
     DisposableEffect(mediaController) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
@@ -167,6 +180,7 @@ fun NowPlayingScreen(
         }
     }
 
+    // progress bar calculations - these are derived so they only recompose when needed
     val progressFraction by remember {
         derivedStateOf {
             if (duration > 0) (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f) else 0f
@@ -436,6 +450,8 @@ fun NowPlayingScreen(
     }
 }
 
+// synced lyrics view - this shows the lyrics that follow along with the music
+// tbh this was the hardest part of the whole app, getting the scroll to work right
 @Composable
 fun SyncedLyricsView(
     lines: List<LyricsLine>,
@@ -446,6 +462,7 @@ fun SyncedLyricsView(
     biggerText: Boolean = false,
     centerLyrics: Boolean = true
 ) {
+    // no synced lyrics? just show plain text then
     if (lines.isEmpty()) {
         Box(
             modifier = Modifier
@@ -472,6 +489,8 @@ fun SyncedLyricsView(
     val density = LocalDensity.current
     var listHeightPx by remember { mutableIntStateOf(0) }
 
+    // auto scroll to the active lyric line - this was SO annoying to get right
+    // the offset math took me like 2 hours to figure out lol
     LaunchedEffect(activeIndex, lines) {
         if (lines.isNotEmpty() && enableSync) {
             snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }
@@ -489,6 +508,7 @@ fun SyncedLyricsView(
 
     val lyricsFontSize = if (biggerText) 22.sp else 18.sp
 
+    // the actual lyrics list
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -518,6 +538,8 @@ fun SyncedLyricsView(
     }
 }
 
+// individual lyric line with all the fancy animations
+// the glow effect was inspiration from spotify tbh
 @Composable
 private fun LyricLineItem(
     line: LyricsLine,
@@ -609,9 +631,14 @@ private fun LyricLineItem(
     )
 }
 
+// pre-compiled regex patterns for parsing LRC files
+// these are the format [MM:SS.ms]text and [MM:SS]text
 private val lrcRegex = Regex("\\[(\\d+):(\\d+)\\.(\\d+)](.*)")
 private val lrcAltRegex = Regex("\\[(\\d+):(\\d+)](.*)")
 
+// parses LRC format lyrics into a list of timed lines
+// LRC looks like: [00:12.34]Hello world
+// took me a while to understand regex but its actually pretty cool
 fun parseLrc(lrc: String): List<LyricsLine> {
     val lines = mutableListOf<LyricsLine>()
 
@@ -621,6 +648,7 @@ fun parseLrc(lrc: String): List<LyricsLine> {
             val min = match.groupValues[1].toLong()
             val sec = match.groupValues[2].toLong()
             val msPart = match.groupValues[3]
+            // handle different ms formats (1, 2, or 3 digits)
             val ms = when (msPart.length) {
                 1 -> msPart.toLong() * 100
                 2 -> msPart.toLong() * 10
@@ -632,6 +660,7 @@ fun parseLrc(lrc: String): List<LyricsLine> {
                 lines.add(LyricsLine(time, text))
             }
         } else {
+            // try the simpler format without milliseconds
             val matchAlt = lrcAltRegex.find(line)
             if (matchAlt != null) {
                 val min = matchAlt.groupValues[1].toLong()
@@ -644,9 +673,11 @@ fun parseLrc(lrc: String): List<LyricsLine> {
             }
         }
     }
-    return lines.sortedBy { it.time }
+    return lines.sortedBy { it.time } // gotta sort by time or everything breaks
 }
 
+// marquee text that scrolls when the song title is too long
+// saw this on spotify and was like "i need that"
 @Composable
 fun MarqueeText(
     text: String,
@@ -660,9 +691,10 @@ fun MarqueeText(
     }
 
     var marqueeCycles by remember { mutableIntStateOf(0) }
+    // scroll back and forth 3 times then stop
     LaunchedEffect(scrollState.maxValue, marqueeCycles) {
         if (scrollState.maxValue > 0 && marqueeCycles < 3) {
-            delay(2000)
+            delay(2000) // wait a bit before starting
             scrollState.animateScrollTo(
                 value = scrollState.maxValue,
                 animationSpec = tween(
@@ -670,7 +702,7 @@ fun MarqueeText(
                     easing = LinearEasing
                 )
             )
-            delay(1000)
+            delay(1000) // pause at the end
             scrollState.animateScrollTo(
                 value = 0,
                 animationSpec = tween(
