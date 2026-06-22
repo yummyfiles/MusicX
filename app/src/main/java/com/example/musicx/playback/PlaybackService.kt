@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PlaybackService : MediaSessionService() {
 
@@ -42,9 +43,9 @@ class PlaybackService : MediaSessionService() {
         setupAudioEffects(player.audioSessionId)
 
         // Sync settings
-        serviceScope.launch {
+        serviceScope.launch(Dispatchers.IO) {
             settingsRepository.generalSettings.collect { settings ->
-                applySettings(settings)
+                withContext(Dispatchers.Main) { applySettings(settings) }
             }
         }
 

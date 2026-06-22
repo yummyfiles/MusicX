@@ -58,7 +58,7 @@ data class LyricsLine(val time: Long, val text: String)
 fun NowPlayingScreen(
     viewModel: SongsViewModel,
     mediaController: MediaController?,
-    songs: List<com.example.musicx.model.Song>,
+    currentSong: com.example.musicx.model.Song?,
     generalSettings: GeneralSettings = GeneralSettings(),
     onBack: () -> Unit
 ) {
@@ -72,13 +72,7 @@ fun NowPlayingScreen(
     var repeatMode by remember { mutableIntStateOf(mediaController?.repeatMode ?: Player.REPEAT_MODE_OFF) }
     var shuffleEnabled by remember { mutableStateOf(mediaController?.shuffleModeEnabled ?: false) }
 
-    val currentMediaId = mediaController?.currentMediaItem?.mediaId
-    val songsById = remember(songs) {
-        songs.associateBy { it.id.toString() }
-    }
-    val song = remember(currentMediaId, songsById) {
-        currentMediaId?.let { songsById[it] }
-    }
+    val song = currentSong
     val lyricsText = song?.lyrics
 
     val syncedLyrics = remember(lyricsText) {
@@ -87,7 +81,6 @@ fun NowPlayingScreen(
     val hasSyncedLyrics = syncedLyrics.isNotEmpty()
     val showLyricsInPlayer = generalSettings.showLyricsInPlayer
 
-    // Compute activeIndex here so SyncedLyricsView only recomposes when line changes, not every 250ms
     val activeLyricsIndex = remember {
         derivedStateOf {
             val predictionOffset = 150L
@@ -95,19 +88,23 @@ fun NowPlayingScreen(
         }
     }
 
-    var showLyrics by remember { mutableStateOf(false) }
+    val showLyrics by remember {
+        derivedStateOf { hasSyncedLyrics && showLyricsInPlayer }
+    }
+    var userToggledLyrics by remember { mutableStateOf(false) }
+    val lyricsVisible = showLyrics || userToggledLyrics
 
-    LaunchedEffect(currentMediaId, showLyricsInPlayer) {
-        showLyrics = hasSyncedLyrics && showLyricsInPlayer
+    LaunchedEffect(currentSong?.id) {
+        userToggledLyrics = false
     }
 
-    LaunchedEffect(currentMediaId) {
+    LaunchedEffect(currentSong?.id) {
         if (song != null && lyricsText == null) {
             viewModel.autoFetchLyrics(song)
         }
     }
 
-    LaunchedEffect(mediaController, mediaController?.currentMediaItem) {
+    LaunchedEffect(mediaController, mediaController?.currentMediaItem?.mediaId) {
         if (mediaController != null) {
             isPlaying = mediaController.isPlaying
             currentPosition = mediaController.currentPosition.coerceAtLeast(0L)
@@ -121,11 +118,10 @@ fun NowPlayingScreen(
         }
     }
 
-    // Smooth progress polling during playback
     LaunchedEffect(isPlaying) {
         if (isPlaying && mediaController != null) {
             while (true) {
-                delay(100)
+                delay(300)
                 currentPosition = mediaController.currentPosition.coerceAtLeast(0L)
                 duration = mediaController.duration.coerceAtLeast(0L)
             }
@@ -207,11 +203,11 @@ fun NowPlayingScreen(
                     fontFamily = com.example.musicx.ui.theme.ShareTechMono
                 )
 
-                IconButton(onClick = { showLyrics = !showLyrics }) {
+                IconButton(onClick = { userToggledLyrics = !userToggledLyrics }) {
                     Icon(
-                        if (showLyrics) Icons.Rounded.Image else Icons.AutoMirrored.Rounded.Notes,
+                        if (lyricsVisible) Icons.Rounded.Image else Icons.AutoMirrored.Rounded.Notes,
                         contentDescription = "Lyrics",
-                        tint = if (showLyrics) MusicXTheme.colors.primaryAccent else MusicXTheme.colors.iconPrimary
+                        tint = if (lyricsVisible) MusicXTheme.colors.primaryAccent else MusicXTheme.colors.iconPrimary
                     )
                 }
             }
@@ -233,7 +229,7 @@ fun NowPlayingScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Crossfade(
-                    targetState = showLyrics,
+                    targetState = lyricsVisible,
                     animationSpec = tween(350),
                     label = "LyricsCrossfade"
                 ) { showingLyrics ->
@@ -613,13 +609,14 @@ private fun LyricLineItem(
     )
 }
 
+private val lrcRegex = Regex("\\[(\\d+):(\\d+)\\.(\\d+)](.*)")
+private val lrcAltRegex = Regex("\\[(\\d+):(\\d+)](.*)")
+
 fun parseLrc(lrc: String): List<LyricsLine> {
     val lines = mutableListOf<LyricsLine>()
-    val regex = Regex("\\[(\\d+):(\\d+)\\.(\\d+)](.*)")
-    val regexAlt = Regex("\\[(\\d+):(\\d+)](.*)")
 
     lrc.lines().forEach { line ->
-        val match = regex.find(line)
+        val match = lrcRegex.find(line)
         if (match != null) {
             val min = match.groupValues[1].toLong()
             val sec = match.groupValues[2].toLong()
@@ -635,7 +632,7 @@ fun parseLrc(lrc: String): List<LyricsLine> {
                 lines.add(LyricsLine(time, text))
             }
         } else {
-            val matchAlt = regexAlt.find(line)
+            val matchAlt = lrcAltRegex.find(line)
             if (matchAlt != null) {
                 val min = matchAlt.groupValues[1].toLong()
                 val sec = matchAlt.groupValues[2].toLong()

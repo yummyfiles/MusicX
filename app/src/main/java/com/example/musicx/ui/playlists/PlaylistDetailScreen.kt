@@ -34,7 +34,10 @@ fun PlaylistDetailScreen(
     
     val playlistSongs = remember(playlist, songs) {
         if (playlist == null) emptyList()
-        else songs.filter { playlist.songUris.contains(it.mediaUri.toString()) }
+        else {
+            val uriSet = playlist.songUris.toHashSet()
+            songs.filter { uriSet.contains(it.mediaUri.toString()) }
+        }
     }
 
     Scaffold(

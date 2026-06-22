@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
@@ -20,6 +21,7 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     private var hasLoadedSongs = false
+    private var lyricsSyncJob: Job? = null
 
     private val _selectedSongUris = MutableStateFlow<Set<String>>(emptySet())
     val selectedSongUris: StateFlow<Set<String>> = _selectedSongUris.asStateFlow()
@@ -74,8 +76,8 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
             try {
                 _songs.value = repository.fetchLocalSongs()
                 hasLoadedSongs = true
-                // Start background lyrics sync without blocking the UI
-                launch { repository.syncAllLyrics() }
+                lyricsSyncJob?.cancel()
+                lyricsSyncJob = launch { repository.syncAllLyrics() }
             } catch (e: Exception) {
                 android.util.Log.e("SongsViewModel", "Failed to load songs", e)
             } finally {
@@ -91,7 +93,8 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
                 repository.importSongs(uris)
                 _songs.value = repository.fetchLocalSongs()
                 hasLoadedSongs = true
-                launch { repository.syncAllLyrics() }
+                lyricsSyncJob?.cancel()
+                lyricsSyncJob = launch { repository.syncAllLyrics() }
             } catch (e: Exception) {
                 android.util.Log.e("SongsViewModel", "Failed to import songs", e)
             } finally {

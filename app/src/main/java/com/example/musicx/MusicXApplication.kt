@@ -45,7 +45,7 @@ class MusicXApplication : Application(), ImageLoaderFactory {
         return ImageLoader.Builder(this)
             .memoryCache {
                 MemoryCache.Builder(this)
-                    .maxSizePercent(0.20)
+                    .maxSizePercent(0.25)
                     .build()
             }
             .diskCache {
@@ -54,6 +54,7 @@ class MusicXApplication : Application(), ImageLoaderFactory {
                     .maxSizeBytes(50 * 1024 * 1024)
                     .build()
             }
+            .crossfade(true)
             .build()
     }
 }

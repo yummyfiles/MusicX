@@ -33,7 +33,7 @@ fun MusicXTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val musicXColors = themeState.toComposeColors()
+    val musicXColors = remember(themeState) { themeState.toComposeColors() }
     
     val colorScheme = darkColorScheme(
         primary = musicXColors.primaryAccent,

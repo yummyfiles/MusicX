@@ -15,6 +15,8 @@ import com.example.musicx.data.local.entity.MetadataOverride
 import com.example.musicx.data.local.entity.Playlist
 import com.example.musicx.model.Song
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
@@ -247,50 +249,50 @@ class MusicRepository(private val context: Context) {
 
                 val internalUri = Uri.fromFile(destFile)
                 val retriever = MediaMetadataRetriever()
-                retriever.setDataSource(context, internalUri)
+                try {
+                    retriever.setDataSource(context, internalUri)
                 
-                var title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
-                var artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
-                    ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
-                val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
+                    var title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+                    var artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+                        ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
+                    val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
                 
-                // Better fallback to realName if metadata is missing or looks like garbage
-                if (title == null || title.contains("encoded=") || title.contains("acc=")) {
-                    val cleanName = realName.substringBeforeLast(".")
-                    
-                    if (cleanName.contains(" - ")) {
-                        val parts = cleanName.split(" - ", limit = 2)
-                        if (artist == null || artist == "Unknown Artist") {
-                            artist = parts[0].trim()
+                    if (title == null || title.contains("encoded=") || title.contains("acc=")) {
+                        val cleanName = realName.substringBeforeLast(".")
+                        
+                        if (cleanName.contains(" - ")) {
+                            val parts = cleanName.split(" - ", limit = 2)
+                            if (artist == null || artist == "Unknown Artist") {
+                                artist = parts[0].trim()
+                            }
+                            title = parts[1].trim()
+                        } else {
+                            title = cleanName
                         }
-                        title = parts[1].trim()
-                    } else {
-                        title = cleanName
                     }
-                }
                 
-                if (artist.isNullOrBlank()) artist = "Unknown Artist"
-                if (title.isBlank()) title = "Unknown Title"
+                    if (artist.isNullOrBlank()) artist = "Unknown Artist"
+                    if (title.isBlank()) title = "Unknown Title"
 
-                // Extract and save artwork
-                val artworkBytes = retriever.embeddedPicture
-                var internalArtUri: String? = null
-                if (artworkBytes != null) {
-                    val artFile = File(artDir, "art_${destFile.nameWithoutExtension}.jpg")
-                    FileOutputStream(artFile).use { it.write(artworkBytes) }
-                    internalArtUri = Uri.fromFile(artFile).toString()
+                    val artworkBytes = retriever.embeddedPicture
+                    var internalArtUri: String? = null
+                    if (artworkBytes != null) {
+                        val artFile = File(artDir, "art_${destFile.nameWithoutExtension}.jpg")
+                        FileOutputStream(artFile).use { it.write(artworkBytes) }
+                        internalArtUri = Uri.fromFile(artFile).toString()
+                    }
+
+                    LibrarySong(
+                        uri = internalUri.toString(),
+                        title = title!!,
+                        artist = artist!!,
+                        duration = duration,
+                        albumArtUri = internalArtUri,
+                        lyrics = null
+                    )
+                } finally {
+                    try { retriever.release() } catch (_: Exception) {}
                 }
-
-                retriever.release()
-
-                LibrarySong(
-                    uri = internalUri.toString(),
-                    title = title!!,
-                    artist = artist!!,
-                    duration = duration,
-                    albumArtUri = internalArtUri,
-                    lyrics = null // Fetch in background later
-                )
             } catch (e: Exception) {
                 android.util.Log.e("MusicRepository", "Failed to import: $uri", e)
                 null
@@ -380,19 +382,22 @@ class MusicRepository(private val context: Context) {
         
         android.util.Log.d("MusicRepository", "Starting background lyrics sync for ${missing.size} songs")
         
-        missing.forEach { song ->
-            try {
-                val lyrics = lyricsFetcher.fetchLyrics(song.artist, song.title)
-                if (lyrics != null) {
-                    librarySongDao.updateLyrics(song.uri, lyrics)
-                    android.util.Log.d("MusicRepository", "Synced lyrics for: ${song.title}")
+        val semaphore = kotlinx.coroutines.sync.Semaphore(3)
+        missing.map { song ->
+            async {
+                semaphore.withUse {
+                    try {
+                        val lyrics = lyricsFetcher.fetchLyrics(song.artist, song.title)
+                        if (lyrics != null) {
+                            librarySongDao.updateLyrics(song.uri, lyrics)
+                            android.util.Log.d("MusicRepository", "Synced lyrics for: ${song.title}")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.w("MusicRepository", "Failed to sync lyrics for ${song.title}: ${e.message}")
+                    }
                 }
-                // Small delay to be polite to APIs
-                kotlinx.coroutines.delay(500)
-            } catch (e: Exception) {
-                android.util.Log.w("MusicRepository", "Failed to sync lyrics for ${song.title}: ${e.message}")
             }
-        }
+        }.awaitAll()
         android.util.Log.d("MusicRepository", "Finished background lyrics sync")
     }
 }

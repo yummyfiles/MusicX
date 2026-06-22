@@ -259,17 +259,23 @@ fun MusicXApp(
                         is Destination.NowPlaying -> NavEntry(destination) {
                             val songs by songsViewModel.songs.collectAsState()
                             val generalSettings by settingsViewModel.generalSettings.collectAsState()
+                            val currentMediaId = mediaController?.currentMediaItem?.mediaId
+                            val currentSong = remember(songs, currentMediaId) {
+                                currentMediaId?.let { id -> songs.find { it.id.toString() == id } }
+                            }
                             NowPlayingScreen(
                                 viewModel = songsViewModel,
                                 mediaController = mediaController,
-                                songs = songs,
+                                currentSong = currentSong,
                                 generalSettings = generalSettings,
                                 onBack = { popBackStack() }
                             )
                         }
                         is Destination.EditMetadata -> NavEntry(destination) {
                             val songs by songsViewModel.songs.collectAsState()
-                            val song = songs.find { it.id == destination.songId }
+                            val song = remember(songs, destination.songId) {
+                                songs.find { it.id == destination.songId }
+                            }
                             if (song != null) {
                                 MetadataEditor(
                                     song = song,

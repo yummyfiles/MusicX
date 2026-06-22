@@ -17,7 +17,7 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val themeState: StateFlow<ThemeState> = repository.themeState
         .stateIn(
             viewModelScope,
-            SharingStarted.Eagerly,
+            SharingStarted.WhileSubscribed(5000),
             ThemeState()
         )
 
@@ -31,7 +31,7 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val generalSettings: StateFlow<GeneralSettings> = repository.generalSettings
         .stateIn(
             viewModelScope,
-            SharingStarted.Eagerly,
+            SharingStarted.WhileSubscribed(5000),
             GeneralSettings()
         )
 

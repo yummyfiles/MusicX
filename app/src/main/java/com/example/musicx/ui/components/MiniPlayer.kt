@@ -17,12 +17,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.musicx.ui.theme.MusicXTheme
 import kotlinx.coroutines.delay
 
@@ -56,7 +58,7 @@ fun MiniPlayer(
     }
 
     // Initial state sync
-    LaunchedEffect(mediaController, mediaController?.currentMediaItem) {
+    LaunchedEffect(mediaController, mediaController?.currentMediaItem?.mediaId) {
         if (mediaController != null) {
             isPlaying = mediaController.isPlaying
             val metadata = mediaController.currentMediaItem?.mediaMetadata
@@ -143,7 +145,11 @@ fun MiniPlayer(
                 ) {
                     if (albumArtUri != null) {
                         AsyncImage(
-                            model = albumArtUri,
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(albumArtUri)
+                                .size(96, 96)
+                                .crossfade(true)
+                                .build(),
                             contentDescription = null,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop

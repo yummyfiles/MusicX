@@ -15,6 +15,13 @@ class LyricsFetcher {
             .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
             .build()
+
+        private val containerPattern = Regex("data-lyrics-container=\"true\">(.*?)</div>")
+        private val tagStripPattern = Regex("<.*?>")
+        private val oldLyricsPattern = Regex("class=\"lyrics\">(.*?)</div>", RegexOption.DOT_MATCHES_ALL)
+        private val artistSplitPattern = Regex("(?i)ft\\.|feat\\.|featuring|&|,|and")
+        private val parenBracketPattern = Regex("(?i)\\(.*?\\)|\\[.*?]")
+        private val videoInfoPattern = Regex("(?i)official.*?video|music.*?video|remastered|live|lyric.*?video")
     }
 
     private val client get() = sharedClient
@@ -141,14 +148,13 @@ class LyricsFetcher {
                 val html = response.body?.string() ?: ""
                 
                 // Genius structure: look for data-lyrics-container divs
-                val containerPattern = Regex("data-lyrics-container=\"true\">(.*?)</div>")
                 val containers = containerPattern.findAll(html)
                 
                 if (containers.any()) {
                     return containers.map { it.groupValues[1] }
                         .joinToString("\n")
                         .replace("<br/>", "\n")
-                        .replace(Regex("<.*?>"), "") // Strip tags
+                        .replace(tagStripPattern, "") // Strip tags
                         .replace("&quot;", "\"")
                         .replace("&amp;", "&")
                         .replace("&#x27;", "'")
@@ -156,11 +162,10 @@ class LyricsFetcher {
                 }
                 
                 // Fallback for older Genius layout or different structure
-                val oldPattern = Regex("class=\"lyrics\">(.*?)</div>", RegexOption.DOT_MATCHES_ALL)
-                val oldMatch = oldPattern.find(html)
+                val oldMatch = oldLyricsPattern.find(html)
                 if (oldMatch != null) {
                     return oldMatch.groupValues[1]
-                        .replace(Regex("<.*?>"), "")
+                        .replace(tagStripPattern, "")
                         .trim()
                 }
             }
@@ -194,12 +199,12 @@ class LyricsFetcher {
     }
 
     private fun cleanArtistName(artist: String): String {
-        return artist.split(Regex("(?i)ft\\.|feat\\.|featuring|&|,|and")).first().trim()
+        return artist.split(artistSplitPattern).first().trim()
     }
 
     private fun cleanTrackTitle(title: String): String {
-        return title.replace(Regex("(?i)\\(.*?\\)|\\[.*?]"), "")
-            .replace(Regex("(?i)official.*?video|music.*?video|remastered|live|lyric.*?video"), "")
+        return title.replace(parenBracketPattern, "")
+            .replace(videoInfoPattern, "")
             .trim()
     }
 }
