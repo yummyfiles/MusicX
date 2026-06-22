@@ -24,12 +24,12 @@ class LyricsFetcher {
         val cleanArtist = cleanArtistName(artist)
         val cleanTitle = cleanTrackTitle(title)
 
-        // 1. Try Genius first (best coverage for niche songs)
-        var lyrics = tryGeniusScrape(cleanArtist, cleanTitle)
+        // 1. Try LRCLIB (synced lyrics) first for "following" experience
+        var lyrics = tryLrcLib(cleanArtist, cleanTitle)
         if (lyrics != null) return@withContext lyrics
 
-        // 2. Try LRCLIB (synced lyrics)
-        lyrics = tryLrcLib(cleanArtist, cleanTitle)
+        // 2. Try Genius (best coverage for plain text)
+        lyrics = tryGeniusScrape(cleanArtist, cleanTitle)
         if (lyrics != null) return@withContext lyrics
 
         // 3. Try Lyrics.ovh (Fallback)
@@ -57,10 +57,15 @@ class LyricsFetcher {
             if (response.isSuccessful) {
                 val jsonArray = response.body?.string()?.let { JSONArray(it) }
                 if (jsonArray != null && jsonArray.length() > 0) {
+                    // Preferred: find first result that HAS synced lyrics
+                    for (i in 0 until jsonArray.length()) {
+                        val res = jsonArray.getJSONObject(i)
+                        val synced = res.optString("syncedLyrics")
+                        if (synced.isNotBlank()) return synced
+                    }
+                    // Fallback: just return the plain lyrics of the first result
                     val firstResult = jsonArray.getJSONObject(0)
-                    return firstResult.optString("syncedLyrics").ifBlank { 
-                        firstResult.optString("plainLyrics")
-                    }.ifBlank { null }
+                    return firstResult.optString("plainLyrics").ifBlank { null }
                 }
             }
         } catch (e: Exception) {

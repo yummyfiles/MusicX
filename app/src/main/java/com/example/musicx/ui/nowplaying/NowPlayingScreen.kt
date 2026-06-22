@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -23,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -30,9 +33,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -120,7 +125,7 @@ fun NowPlayingScreen(
     LaunchedEffect(isPlaying) {
         if (isPlaying && mediaController != null) {
             while (true) {
-                delay(500)
+                delay(100)
                 currentPosition = mediaController.currentPosition.coerceAtLeast(0L)
                 duration = mediaController.duration.coerceAtLeast(0L)
             }
@@ -455,11 +460,13 @@ fun SyncedLyricsView(
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
+            val scrollState = rememberScrollState()
             Text(
                 text = plainLyrics ?: "Looking for lyrics...",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MusicXTheme.colors.primaryText,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.verticalScroll(scrollState)
             )
         }
         return
@@ -469,13 +476,10 @@ fun SyncedLyricsView(
     val density = LocalDensity.current
     var listHeightPx by remember { mutableIntStateOf(0) }
 
-    // Scroll to center the active line in the container
     LaunchedEffect(activeIndex, lines) {
         if (lines.isNotEmpty() && enableSync) {
-            // Wait for LazyColumn to finish its first layout
             snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }
                 .first { it }
-            // Now layout is done — listHeightPx is set and items are measured
             val lineHeightPx = with(density) {
                 val fontSize = if (biggerText) 22.sp else 18.sp
                 fontSize.toPx() * 1.5f + 24.dp.toPx()
@@ -483,7 +487,7 @@ fun SyncedLyricsView(
             val contentPaddingPx = with(density) { 80.dp.toPx() * 2 }
             val visibleHeightPx = (listHeightPx - contentPaddingPx).coerceAtLeast(0f)
             val targetOffset = ((visibleHeightPx - lineHeightPx) / 2).coerceAtLeast(0f)
-            listState.scrollToItem(activeIndex, scrollOffset = targetOffset.toInt())
+            listState.animateScrollToItem(activeIndex, scrollOffset = targetOffset.toInt())
         }
     }
 
@@ -506,40 +510,107 @@ fun SyncedLyricsView(
         ) {
             itemsIndexed(lines, key = { index, line -> line.time }) { index, line ->
                 val isActive = index == activeIndex
-                val color by animateColorAsState(
-                    targetValue = if (isActive) MusicXTheme.colors.lyricsActive else MusicXTheme.colors.lyricsInactive,
-                    animationSpec = tween(200)
-                )
-                val scale by animateFloatAsState(
-                    targetValue = if (isActive && enableSync) 1.15f else 1f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
-                )
-                val alpha by animateFloatAsState(
-                    targetValue = if (isActive) 1f else 0.4f,
-                    animationSpec = tween(200)
-                )
-
-                Text(
-                    text = line.text,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = if (isActive && enableSync) FontWeight.Bold else FontWeight.Normal,
-                        fontSize = lyricsFontSize
-                    ),
-                    color = color,
-                    textAlign = if (centerLyrics) TextAlign.Center else TextAlign.Start,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 12.dp)
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                            this.alpha = alpha
-                        }
-                        .clickable { onLineClick(line.time) }
+                LyricLineItem(
+                    line = line,
+                    isActive = isActive && enableSync,
+                    lyricsFontSize = lyricsFontSize,
+                    centerLyrics = centerLyrics,
+                    onClick = { onLineClick(line.time) }
                 )
             }
         }
     }
+}
+
+@Composable
+private fun LyricLineItem(
+    line: LyricsLine,
+    isActive: Boolean,
+    lyricsFontSize: TextUnit,
+    centerLyrics: Boolean,
+    onClick: () -> Unit
+) {
+    val animatedColor by animateColorAsState(
+        targetValue = if (isActive) MusicXTheme.colors.lyricsActive else MusicXTheme.colors.lyricsInactive,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "LyricColor"
+    )
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isActive) 1.12f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "LyricScale"
+    )
+    val animatedAlpha by animateFloatAsState(
+        targetValue = if (isActive) 1f else 0.35f,
+        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+        label = "LyricAlpha"
+    )
+    val animatedOffsetY by animateFloatAsState(
+        targetValue = if (isActive) -4f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "LyricOffsetY"
+    )
+    val animatedLetterSpacing by animateFloatAsState(
+        targetValue = if (isActive) 1.5f else 0f,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "LyricLetterSpacing"
+    )
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (isActive) 0.6f else 0f,
+        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        label = "LyricGlowAlpha"
+    )
+    val glowRadius by animateFloatAsState(
+        targetValue = if (isActive) 30f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessVeryLow
+        ),
+        label = "LyricGlowRadius"
+    )
+
+    val accentColor = MusicXTheme.colors.primaryAccent
+
+    Text(
+        text = line.text,
+        style = MaterialTheme.typography.titleLarge.copy(
+            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+            fontSize = lyricsFontSize,
+            letterSpacing = animatedLetterSpacing.sp
+        ),
+        color = animatedColor,
+        textAlign = if (centerLyrics) TextAlign.Center else TextAlign.Start,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .graphicsLayer {
+                scaleX = animatedScale
+                scaleY = animatedScale
+                this.alpha = animatedAlpha
+                translationY = animatedOffsetY
+            }
+            .drawBehind {
+                if (glowAlpha > 0.01f) {
+                    drawCircle(
+                        color = accentColor.copy(alpha = glowAlpha * 0.15f),
+                        radius = glowRadius * this.density,
+                        center = Offset(size.width / 2, size.height / 2)
+                    )
+                    drawCircle(
+                        color = accentColor.copy(alpha = glowAlpha * 0.08f),
+                        radius = glowRadius * 1.5f * this.density,
+                        center = Offset(size.width / 2, size.height / 2)
+                    )
+                }
+            }
+            .clickable(onClick = onClick)
+    )
 }
 
 fun parseLrc(lrc: String): List<LyricsLine> {
