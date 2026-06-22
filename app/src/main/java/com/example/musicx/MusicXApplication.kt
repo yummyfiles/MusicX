@@ -39,6 +39,8 @@ class MusicXApplication : Application(), ImageLoaderFactory {
             ).apply {
                 description = "Controls music playback"
                 setShowBadge(false)
+                enableLights(true)
+                lightColor = 0xFFFFFFFF.toInt()
             }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)

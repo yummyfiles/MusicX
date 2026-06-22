@@ -34,15 +34,26 @@ class PlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
         settingsRepository = SettingsRepository(applicationContext)
-        
+
+        // set up our custom notification provider with theme colors
+        val provider = MusicXNotificationProvider(applicationContext)
+        setMediaNotificationProvider(provider)
+
+        // listen for theme changes and update notification colors
+        serviceScope.launch(Dispatchers.IO) {
+            settingsRepository.themeState.collect { theme ->
+                provider.updateColors(theme.notificationBackground, theme.notificationText)
+            }
+        }
+
         // build the player - this is the actual thing that plays music
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(AudioAttributes.DEFAULT, true)
             .setHandleAudioBecomingNoisy(true) // pauses when headphones disconnect, pretty neat
             .build()
-            
+
         player.volume = 1.0f // max volume by default
-        
+
         setupAudioEffects(player.audioSessionId) // bass boost go brrr
 
         // listen for settings changes and apply them
@@ -67,11 +78,11 @@ class PlaybackService : MediaSessionService() {
 
         val builder = MediaSession.Builder(this, player)
             .setId("musicx") // gotta give it a name ig
-        
+
         if (sessionActivityPendingIntent != null) {
             builder.setSessionActivity(sessionActivityPendingIntent)
         }
-        
+
         mediaSession = builder.build()
     }
 

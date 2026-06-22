@@ -398,16 +398,17 @@ class MusicRepository(private val context: Context) {
         val semaphore = kotlinx.coroutines.sync.Semaphore(3)
         missing.map { song ->
             async {
-                semaphore.withUse {
-                    try {
-                        val lyrics = lyricsFetcher.fetchLyrics(song.artist, song.title)
-                        if (lyrics != null) {
-                            librarySongDao.updateLyrics(song.uri, lyrics)
-                            android.util.Log.d("MusicRepository", "Synced lyrics for: ${song.title}")
-                        }
-                    } catch (e: Exception) {
-                        android.util.Log.w("MusicRepository", "Failed to sync lyrics for ${song.title}: ${e.message}")
+                semaphore.acquire()
+                try {
+                    val lyrics = lyricsFetcher.fetchLyrics(song.artist, song.title)
+                    if (lyrics != null) {
+                        librarySongDao.updateLyrics(song.uri, lyrics)
+                        android.util.Log.d("MusicRepository", "Synced lyrics for: ${song.title}")
                     }
+                } catch (e: Exception) {
+                    android.util.Log.w("MusicRepository", "Failed to sync lyrics for ${song.title}: ${e.message}")
+                } finally {
+                    semaphore.release()
                 }
             }
         }.awaitAll()

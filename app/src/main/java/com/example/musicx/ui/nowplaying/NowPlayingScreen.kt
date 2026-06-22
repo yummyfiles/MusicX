@@ -122,7 +122,7 @@ fun NowPlayingScreen(
             val metadata = mediaController.currentMediaItem?.mediaMetadata
             songTitle = metadata?.title?.toString() ?: "Unknown Title"
             artistName = metadata?.artist?.toString() ?: "Unknown Artist"
-            albumArtUri = metadata.artworkUri
+            albumArtUri = metadata?.artworkUri
             repeatMode = mediaController.repeatMode
             shuffleEnabled = mediaController.shuffleModeEnabled
         }
@@ -149,7 +149,7 @@ fun NowPlayingScreen(
             override fun onMediaMetadataChanged(metadata: androidx.media3.common.MediaMetadata) {
                 songTitle = metadata.title?.toString() ?: "Unknown Title"
                 artistName = metadata.artist?.toString() ?: "Unknown Artist"
-                albumArtUri = metadata.artworkUri
+            albumArtUri = metadata?.artworkUri
                 duration = mediaController?.duration?.coerceAtLeast(0L) ?: 0L
             }
             override fun onPlaybackStateChanged(playbackState: Int) {
