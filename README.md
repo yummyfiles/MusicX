@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="MusicX_README_Banner.png" width="100%">
+<img src="README_BANNER.png" width="100%">
 
 <br><br>
 
