@@ -45,6 +45,7 @@ Import your songs, organize your library, make playlists, and listen offline wit
 ### Available
 
 - Offline Playback
+- Lyrics Support
 - Local Music Library
 - Search
 - Playlists
@@ -55,12 +56,10 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 ### Planned
 
-- Lyrics Support
 - Animated Splash Screen
 - Better Folder Management
 - Duplicate Song Detection
 - Audio Enhancements
-- More Customization Options
 
 <div align="center">
 
