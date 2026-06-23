@@ -1,23 +1,17 @@
 <div align="center">
 
-<img src="README_BANNER.png" width="100%">
+<img src="README_BANNER_V2.png" width="100%" height="100%">
 
 <br><br>
-
-<img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1500&color=FFFFFF&center=true&vCenter=true&width=800&lines=MusicX;Offline+Music+Player;No+Ads;No+Subscriptions;No+Premium+Features;Just+Your+Music" />
-
 <a href="https://github.com/yummyfiles/MusicX/releases/download/v0.1.0-alpha/MusicX-v1.0.apk">
   <img src="https://img.shields.io/badge/DOWNLOAD-APK-000000?style=for-the-badge&logo=android&logoColor=white&labelColor=000000&color=000000" />
 </a>
-
 <br><br>
-
 #  MusicX
 
 ### Offline Music Player for Android
 
-No ads • No subscriptions • No accounts.
-Just play your music.
+No ads • No subscriptions • No accounts
 
 </div>
 
