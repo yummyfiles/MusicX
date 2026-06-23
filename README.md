@@ -20,7 +20,7 @@ No ads • No subscriptions • No accounts
 
 <div align="center">
 
-❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
+
 
 </div>
 
@@ -36,7 +36,7 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 <div align="center">
 
-❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
+
 
 </div>
 
@@ -64,7 +64,7 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 <div align="center">
 
-❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
+
 
 </div>
 
@@ -83,7 +83,7 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 <div align="center">
 
-❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
+
 
 </div>
 
@@ -100,14 +100,15 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 <div align="center">
 
-❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
+
 
 </div>
 
 <div align="center">
 
-## &lt;MusicX/&gt;
+## &lt; MusicX &gt;
 
 Offline Music.
 
+││╷││╷╷│╷││╷││╷╷│╷││╷││││╷││╷╷│╷││╷││╷╷│╷││╷││││╷││╷╷│╷││╷││╷╷│╷││╷││
 </div>
