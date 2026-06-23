@@ -3,11 +3,14 @@
 <img src="README_BANNER_V2.png" width="100%" height="100%">
 
 <br><br>
+
 <a href="https://github.com/yummyfiles/MusicX/releases/download/v0.1.0-alpha/MusicX-v1.0.apk">
   <img src="https://img.shields.io/badge/DOWNLOAD-APK-000000?style=for-the-badge&logo=android&logoColor=white&labelColor=000000&color=000000" />
 </a>
+
 <br><br>
-#  MusicX
+
+# MusicX
 
 ### Offline Music Player for Android
 
@@ -15,9 +18,13 @@ No ads • No subscriptions • No accounts
 
 </div>
 
----
+<div align="center">
 
-## Why I Made MusicX
+❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
+
+</div>
+
+## ❯ WHY I MADE MUSICX
 
 I got tired of music apps stuffing everything behind subscriptions, ads, and features nobody asked for.
 
@@ -27,33 +34,41 @@ MusicX is built around one idea:
 
 Import your songs, organize your library, make playlists, and listen offline without getting nagged to upgrade.
 
----
+<div align="center">
 
-## Features
+❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
+
+</div>
+
+## ❯ FEATURES
 
 ### Available
 
--  Offline Playback
--  Local Music Library
--  Search
--  Playlists
--  Theme Customization
--  Music Importing
--  Background Playback
--  Media Controls
+- Offline Playback
+- Local Music Library
+- Search
+- Playlists
+- Theme Customization
+- Music Importing
+- Background Playback
+- Media Controls
 
 ### Planned
 
--  Lyrics Support
--  Animated Splash Screen
--  Better Folder Management
--  Duplicate Song Detection
--  Audio Enhancements
--  More Customization Options
+- Lyrics Support
+- Animated Splash Screen
+- Better Folder Management
+- Duplicate Song Detection
+- Audio Enhancements
+- More Customization Options
 
----
+<div align="center">
 
-## Current Progress
+❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
+
+</div>
+
+## ❯ CURRENT PROGRESS
 
 | Component | Status |
 |-----------|----------|
@@ -66,15 +81,13 @@ Import your songs, organize your library, make playlists, and listen offline wit
 | Search | 🚧 In Progress |
 | Splash Animation | ⏳ Planned |
 
----
-
-## Tech Stack
-
 <div align="center">
 
-<img src="https://skillicons.dev/icons?i=kotlin,androidstudio,git,github" />
+❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
 
 </div>
+
+## ❯ TECH STACK
 
 | Category | Technology |
 |-----------|-----------|
@@ -85,45 +98,16 @@ Import your songs, organize your library, make playlists, and listen offline wit
 | Database | Room |
 | Playback | Media3 |
 
----
+<div align="center">
 
-## What MusicX Is
+❯❯❯❯❯❯❯❯❯❯❯❯❯❯❯
 
-✅ Offline First
-
-✅ Fast
-
-✅ Lightweight
-
-✅ Customizable
-
-✅ Free
-
-✅ No Ads
-
----
-
-## What MusicX Isn't
-
-❌ Streaming Service
-
-❌ Subscription App
-
-❌ Account Required
-
-❌ Filled With Popups
-
-❌ Paywalled Features
-
----
-
+</div>
 
 <div align="center">
 
-##  MusicX
+## &lt;MusicX/&gt;
 
 Offline Music.
 
-Nothing Extra.
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z5Z521S7ER)
+</div>
