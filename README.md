@@ -107,7 +107,8 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 ## &lt; MusicX &gt;
 
-Offline Music.
 
-││╷││╷╷│╷││╷││╷╷│╷││╷││││╷││╷╷│╷││╷││╷╷│╷││╷││││╷││╷╷│╷││╷││╷╷│╷││╷
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/8df23469-e7e6-46ee-8d5f-f50e4a5aa03c" width="100%" />
 </div>
