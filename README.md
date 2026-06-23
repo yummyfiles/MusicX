@@ -105,6 +105,36 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 <div align="center">
 
+<br><br>
+
+<div align="center">
+
+<h2>❯ Support MusicX</h2>
+
+<p>
+MusicX will never have ads.<br>
+Never have subscriptions.<br>
+Never lock features behind paywalls.
+</p>
+
+<p>
+If you want to help keep it that way —
+</p>
+
+<a href="https://thanks.dev/yummyfiles">
+  <img src="https://img.shields.io/badge/KEEP_MUSICX_AD_FREE-0d0d0d?style=for-the-badge&logo=none&logoColor=white" />
+</a>
+
+<br><br>
+
+<svg width="160" height="10">
+  <rect width="160" height="2" y="4" fill="#0d0d0d">
+    <animate attributeName="width" values="0;160;0" dur="2.5s" repeatCount="indefinite" />
+  </rect>
+</svg>
+
+</div>
+
 ## &lt; MusicX &gt;
 
 
