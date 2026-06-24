@@ -1,26 +1,21 @@
 <div align="center">
 
-<img src="README_BANNER_V2.png" width="100%" height="100%">
+<img src="https://github.com/user-attachments/assets/e75601e1-80c5-411a-b6f7-9e80a948d7ef" alt="MusicX" width="900" />
 
-<br><br>
+<br>
 
 <a href="https://github.com/yummyfiles/MusicX/releases/download/v0.1.0-alpha/MusicX-v1.0.apk">
-  <img src="https://img.shields.io/badge/DOWNLOAD-APK-000000?style=for-the-badge&logo=android&logoColor=white&labelColor=000000&color=000000" />
+  <img src="https://img.shields.io/badge/DOWNLOAD_APK-000000?style=for-the-badge&logo=android&logoColor=white&labelColor=000000&color=000000" alt="Download APK" />
 </a>
 
-<br><br>
+<br>
 
 # MusicX
 
 ### Offline Music Player for Android
 
-No ads • No subscriptions • No accounts
-
-</div>
-
-<div align="center">
-
-
+No ads • No subscriptions • No accounts  
+No “Start Free Trial” button stalking you 😭
 
 </div>
 
@@ -109,21 +104,6 @@ Import your songs, organize your library, make playlists, and listen offline wit
 
 <div align="center">
 
-<h2>❯ Support MusicX</h2>
-
-<p>
-MusicX will never have ads.<br>
-Never have subscriptions.<br>
-Never lock features behind paywalls.
-</p>
-
-<p>
-If you want to help keep it that way —
-</p>
-
-<a href="https://thanks.dev/yummyfiles">
-  <img src="https://img.shields.io/badge/KEEP_MUSICX_AD_FREE-0d0d0d?style=for-the-badge&logo=none&logoColor=white" />
-</a>
 
 <br><br>
 
