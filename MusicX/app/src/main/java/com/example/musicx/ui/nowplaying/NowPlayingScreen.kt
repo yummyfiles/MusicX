@@ -87,10 +87,12 @@ fun NowPlayingScreen(
 
     // find which lyric line is currently active based on playback position
     // the 150ms offset makes it feel more responsive
+    // returns -1 if no line has been reached yet so we don't highlight before the first timestamp
     val activeLyricsIndex = remember {
         derivedStateOf {
             val predictionOffset = 150L
-            syncedLyrics.indexOfLast { it.time <= currentPosition + predictionOffset }.coerceAtLeast(0)
+            val index = syncedLyrics.indexOfLast { it.time <= currentPosition + predictionOffset }
+            index
         }
     }
 
@@ -495,6 +497,8 @@ fun SyncedLyricsView(
         if (lines.isNotEmpty() && enableSync) {
             snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }
                 .first { it }
+            // if nothing is active yet, just scroll to top so the first lyric is visible
+            val scrollTarget = if (activeIndex < 0) 0 else activeIndex
             val lineHeightPx = with(density) {
                 val fontSize = if (biggerText) 22.sp else 18.sp
                 fontSize.toPx() * 1.5f + 24.dp.toPx()
@@ -502,7 +506,7 @@ fun SyncedLyricsView(
             val contentPaddingPx = with(density) { 80.dp.toPx() * 2 }
             val visibleHeightPx = (listHeightPx - contentPaddingPx).coerceAtLeast(0f)
             val targetOffset = ((visibleHeightPx - lineHeightPx) / 2).coerceAtLeast(0f)
-            listState.animateScrollToItem(activeIndex, scrollOffset = targetOffset.toInt())
+            listState.animateScrollToItem(scrollTarget, scrollOffset = targetOffset.toInt())
         }
     }
 
@@ -585,11 +589,8 @@ private fun LyricLineItem(
         label = "LyricGlowAlpha"
     )
     val glowRadius by animateFloatAsState(
-        targetValue = if (isActive) 30f else 0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessVeryLow
-        ),
+        targetValue = if (isActive) 8f else 0f,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
         label = "LyricGlowRadius"
     )
 
@@ -615,14 +616,11 @@ private fun LyricLineItem(
             }
             .drawBehind {
                 if (glowAlpha > 0.01f) {
+                    // subtle glow behind the active lyric
+                    // tuned really small so it doesn't look like a grey circle anymore
                     drawCircle(
-                        color = accentColor.copy(alpha = glowAlpha * 0.15f),
+                        color = accentColor.copy(alpha = glowAlpha * 0.10f),
                         radius = glowRadius * this.density,
-                        center = Offset(size.width / 2, size.height / 2)
-                    )
-                    drawCircle(
-                        color = accentColor.copy(alpha = glowAlpha * 0.08f),
-                        radius = glowRadius * 1.5f * this.density,
                         center = Offset(size.width / 2, size.height / 2)
                     )
                 }
