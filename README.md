@@ -121,7 +121,7 @@ Never lock features behind paywalls.
 If you want to help keep it that way —
 </p>
 
-<a href="https://thanks.dev/yummyfiles">
+<a href="https://ko-fi.com/yummyfiles">
   <img src="https://img.shields.io/badge/KEEP_MUSICX_AD_FREE-0d0d0d?style=for-the-badge&logo=none&logoColor=white" />
 </a>
 
