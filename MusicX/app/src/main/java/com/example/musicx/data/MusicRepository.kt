@@ -112,11 +112,24 @@ class MusicRepository(private val context: Context) {
 
             validLibrarySongs.add(libSong)
             val override = overrides[libSong.uri]
+            val cleanTitle: String
+            val cleanArtist: String
+            if (override != null) {
+                cleanTitle = override.customTitle ?: libSong.title
+                cleanArtist = override.customArtist ?: libSong.artist
+            } else {
+                val parsed = MetadataCleaner.clean(
+                    rawTitle = libSong.title,
+                    rawArtist = libSong.artist
+                )
+                cleanTitle = parsed.title
+                cleanArtist = parsed.artist
+            }
             songs.add(
                 Song(
                     id = libSong.uri.hashCode().toLong(),
-                    title = override?.customTitle ?: libSong.title,
-                    artist = override?.customArtist ?: libSong.artist,
+                    title = cleanTitle,
+                    artist = cleanArtist,
                     duration = libSong.duration,
                     mediaUri = uri,
                     albumArtUri = libSong.albumArtUri?.toUri(),
@@ -138,7 +151,8 @@ class MusicRepository(private val context: Context) {
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.ALBUM_ID
+            MediaStore.Audio.Media.ALBUM_ID,
+            MediaStore.Audio.Media.DISPLAY_NAME
         )
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.DURATION} > 5000"
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
@@ -156,6 +170,7 @@ class MusicRepository(private val context: Context) {
                 val artistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                 val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
                 val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+                val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
 
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idColumn)
@@ -173,15 +188,28 @@ class MusicRepository(private val context: Context) {
                     if (ignoredUris.contains(uriStr) || internalMusicUris.contains(uriStr)) continue
 
                     val override = overrides[uriStr]
-                    val title = override?.customTitle ?: originalTitle
-                    val artist = override?.customArtist ?: originalArtist
+                    val cleanTitle: String
+                    val cleanArtist: String
+                    if (override != null) {
+                        cleanTitle = override.customTitle ?: originalTitle
+                        cleanArtist = override.customArtist ?: originalArtist
+                    } else {
+                        val displayName = cursor.getString(displayNameColumn)
+                        val parsed = MetadataCleaner.clean(
+                            rawTitle = originalTitle,
+                            rawArtist = originalArtist,
+                            fileNameWithoutExtension = displayName?.substringBeforeLast(".")
+                        )
+                        cleanTitle = parsed.title
+                        cleanArtist = parsed.artist
+                    }
 
                     val albumArtUri = ContentUris.withAppendedId(
                         "content://media/external/audio/albumart".toUri(),
                         albumId
                     )
 
-                    songs.add(Song(id, title, artist, duration, contentUri, albumArtUri, override?.customLyrics))
+                    songs.add(Song(id, cleanTitle, cleanArtist, duration, contentUri, albumArtUri, override?.customLyrics))
                 }
             }
         } catch (e: Exception) {
@@ -271,22 +299,14 @@ class MusicRepository(private val context: Context) {
                         ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
                     val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
                 
-                    if (title == null || title.contains("encoded=") || title.contains("acc=")) {
-                        val cleanName = realName.substringBeforeLast(".")
-                        
-                        if (cleanName.contains(" - ")) {
-                            val parts = cleanName.split(" - ", limit = 2)
-                            if (artist == null || artist == "Unknown Artist") {
-                                artist = parts[0].trim()
-                            }
-                            title = parts[1].trim()
-                        } else {
-                            title = cleanName
-                        }
-                    }
-                
-                    if (artist.isNullOrBlank()) artist = "Unknown Artist"
-                    if (title.isBlank()) title = "Unknown Title"
+                    val cleanName = realName.substringBeforeLast(".")
+                    val parsed = MetadataCleaner.clean(
+                        rawTitle = title?.takeIf { !it.contains("encoded=") && !it.contains("acc=") },
+                        rawArtist = artist,
+                        fileNameWithoutExtension = cleanName
+                    )
+                    title = parsed.title
+                    artist = parsed.artist
 
                     val artworkBytes = retriever.embeddedPicture
                     var internalArtUri: String? = null

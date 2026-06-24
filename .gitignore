@@ -16,3 +16,4 @@ Github Token
 local.properties
 /keystore
 .kotlin
+/releases
