@@ -1,4 +1,4 @@
-1<div align="center">
+<div align="center">
 
 <img src="README_BANNER_V2.png" width="100%" height="100%">
 
