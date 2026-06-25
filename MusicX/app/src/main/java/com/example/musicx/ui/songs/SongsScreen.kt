@@ -385,6 +385,7 @@ fun processSongDisplay(title: String, artist: String): Pair<String, String> {
 
     cleanTitle = cleanTitle.filter { it !in charsToRemove }.trim()
     cleanTitle = cleanTitle.replace(officialTagRegex, "").trim()
+    cleanTitle = cleanTitle.replace('_', ' ').replace(Regex("\\s+"), " ").trim()
 
     return Pair(cleanTitle, cleanArtist)
 }

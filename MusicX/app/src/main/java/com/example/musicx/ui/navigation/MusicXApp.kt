@@ -96,36 +96,31 @@ fun MusicXApp(
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
-                Box {
-                    // Refined Fade Gradient: Solid at the bottom, fades out upwards
+                Column {
+                    // Fade gradient spacer: transparent at top, fades to bottomBar
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp) // Height of the fade effect
-                            .offset(y = (-48).dp) // Position it directly above the MiniPlayer
+                            .height(48.dp)
                             .background(
                                 brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                                     colors = listOf(
                                         androidx.compose.ui.graphics.Color.Transparent,
-                                        MusicXTheme.colors.primaryBackground
+                                        MusicXTheme.colors.bottomBar
                                     )
                                 )
                             )
                     )
 
-                    Column(
-                        modifier = Modifier
-                            .background(MusicXTheme.colors.bottomBar)
+                    MiniPlayer(
+                        mediaController = mediaController,
+                        onNavigateToNowPlaying = { backStack.add(Destination.NowPlaying) }
+                    )
+                    NavigationBar(
+                        containerColor = MusicXTheme.colors.bottomBar,
+                        tonalElevation = 0.dp,
+                        windowInsets = WindowInsets.navigationBars // Fixed: Respect system nav bar
                     ) {
-                        MiniPlayer(
-                            mediaController = mediaController,
-                            onNavigateToNowPlaying = { backStack.add(Destination.NowPlaying) }
-                        )
-                        NavigationBar(
-                            containerColor = MusicXTheme.colors.bottomBar,
-                            tonalElevation = 0.dp,
-                            windowInsets = WindowInsets.navigationBars // Fixed: Respect system nav bar
-                        ) {
                             NavigationItem(
                                 selected = currentDestination is Destination.Songs,
                                 onClick = { 
@@ -167,7 +162,6 @@ fun MusicXApp(
                                 label = "Settings"
                             )
                         }
-                    }
                 }
             }
         },

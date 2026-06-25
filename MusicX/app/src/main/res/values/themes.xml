@@ -9,6 +9,6 @@
     </style>
 
     <style name="Theme.MusicX.Starting" parent="Theme.MusicX">
-        <item name="android:windowBackground">@color/black</item>
+        <item name="android:windowBackground">@drawable/splash_background</item>
     </style>
 </resources>

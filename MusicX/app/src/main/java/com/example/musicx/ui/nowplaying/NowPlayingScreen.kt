@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import com.example.musicx.data.GeneralSettings
@@ -249,78 +250,87 @@ fun NowPlayingScreen(
                     animationSpec = tween(350),
                     label = "LyricsCrossfade"
                 ) { showingLyrics ->
-                    if (showingLyrics) {
-                        SyncedLyricsView(
-                            lines = syncedLyrics,
-                            plainLyrics = lyricsText,
-                            activeIndex = activeLyricsIndex.value,
-                            onLineClick = { time -> mediaController?.seekTo(time) },
-                            enableSync = generalSettings.syncLyrics,
-                            biggerText = generalSettings.biggerLyrics,
-                            centerLyrics = generalSettings.centerLyrics
-                        )
-                    } else {
-                        val pulseAlpha by animateFloatAsState(
-                            targetValue = if (isPlaying) 0.12f else 0.05f,
-                            animationSpec = if (isPlaying) infiniteRepeatable(
-                                animation = tween(3000, easing = FastOutSlowInEasing),
-                                repeatMode = RepeatMode.Reverse
-                            ) else tween(500),
-                            label = "AlbumGlow"
-                        )
-                        val pulseScale by animateFloatAsState(
-                            targetValue = if (isPlaying) 1.05f else 1f,
-                            animationSpec = if (isPlaying) infiniteRepeatable(
-                                animation = tween(3000, easing = FastOutSlowInEasing),
-                                repeatMode = RepeatMode.Reverse
-                            ) else tween(500),
-                            label = "AlbumGlowScale"
-                        )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (showingLyrics) {
+                            SyncedLyricsView(
+                                lines = syncedLyrics,
+                                plainLyrics = lyricsText,
+                                activeIndex = activeLyricsIndex.value,
+                                onLineClick = { time -> mediaController?.seekTo(time) },
+                                enableSync = generalSettings.syncLyrics,
+                                biggerText = generalSettings.biggerLyrics,
+                                centerLyrics = generalSettings.centerLyrics
+                            )
+                        } else {
+                            val pulseAlpha by animateFloatAsState(
+                                targetValue = if (isPlaying) 0.12f else 0.05f,
+                                animationSpec = if (isPlaying) infiniteRepeatable(
+                                    animation = tween(3000, easing = FastOutSlowInEasing),
+                                    repeatMode = RepeatMode.Reverse
+                                ) else tween(500),
+                                label = "AlbumGlow"
+                            )
+                            val pulseScale by animateFloatAsState(
+                                targetValue = if (isPlaying) 1.05f else 1f,
+                                animationSpec = if (isPlaying) infiniteRepeatable(
+                                    animation = tween(3000, easing = FastOutSlowInEasing),
+                                    repeatMode = RepeatMode.Reverse
+                                ) else tween(500),
+                                label = "AlbumGlowScale"
+                            )
 
-                        Box(
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxHeight(0.9f)
-                                .graphicsLayer {
-                                    scaleX = pulseScale
-                                    scaleY = pulseScale
-                                    alpha = pulseAlpha
-                                }
-                                .clip(CircleShape)
-                                .background(
-                                    Brush.radialGradient(
-                                        colors = listOf(MusicXTheme.colors.primaryAccent, Color.Transparent)
+                            Box(
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .fillMaxHeight(0.9f)
+                                    .graphicsLayer {
+                                        scaleX = pulseScale
+                                        scaleY = pulseScale
+                                        alpha = pulseAlpha
+                                    }
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(MusicXTheme.colors.primaryAccent, Color.Transparent)
+                                        )
                                     )
-                                )
-                        )
+                            )
 
-                        Box(
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxHeight(0.9f)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(MusicXTheme.colors.albumPlaceholder)
-                                .border(
-                                    width = 4.dp,
-                                    color = MusicXTheme.colors.outline.copy(alpha = 0.4f),
-                                    shape = RoundedCornerShape(24.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (albumArtUri != null) {
-                                AsyncImage(
-                                    model = albumArtUri,
-                                    contentDescription = "Album Art",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Rounded.MusicNote,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(140.dp),
-                                    tint = MusicXTheme.colors.iconSecondary.copy(alpha = 0.5f)
-                                )
+                            Box(
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .fillMaxHeight(0.9f)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(MusicXTheme.colors.albumPlaceholder)
+                                    .border(
+                                        width = 4.dp,
+                                        color = MusicXTheme.colors.outline.copy(alpha = 0.4f),
+                                        shape = RoundedCornerShape(24.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (albumArtUri != null) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(albumArtUri)
+                                            .size(1024)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = "Album Art",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Rounded.MusicNote,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(140.dp),
+                                        tint = MusicXTheme.colors.iconSecondary.copy(alpha = 0.5f)
+                                    )
+                                }
                             }
                         }
                     }
@@ -630,48 +640,58 @@ private fun LyricLineItem(
 }
 
 // pre-compiled regex patterns for parsing LRC files
-// these are the format [MM:SS.ms]text and [MM:SS]text
-private val lrcRegex = Regex("\\[(\\d+):(\\d+)\\.(\\d+)](.*)")
-private val lrcAltRegex = Regex("\\[(\\d+):(\\d+)](.*)")
+// format: [MM:SS.ms]text and [MM:SS]text, with optional negative times and multiple timestamps
+private val lrcTimestampRegex = Regex("\\[(\\d+):(\\d+(?:\\.\\d+)?)]")
 
 // parses LRC format lyrics into a list of timed lines
 // LRC looks like: [00:12.34]Hello world
-// took me a while to understand regex but its actually pretty cool
+// handles multiple timestamps per line, negative times, and HTML entities
 fun parseLrc(lrc: String): List<LyricsLine> {
     val lines = mutableListOf<LyricsLine>()
 
-    lrc.lines().forEach { line ->
-        val match = lrcRegex.find(line)
-        if (match != null) {
+    lrc.lines().forEach { rawLine ->
+        val line = rawLine.trim()
+        if (line.isBlank()) return@forEach
+
+        // extract all timestamps from the line (including multiple per line)
+        val timestamps = lrcTimestampRegex.findAll(line).map { match ->
             val min = match.groupValues[1].toLong()
-            val sec = match.groupValues[2].toLong()
-            val msPart = match.groupValues[3]
-            // handle different ms formats (1, 2, or 3 digits)
-            val ms = when (msPart.length) {
-                1 -> msPart.toLong() * 100
-                2 -> msPart.toLong() * 10
-                else -> msPart.take(3).toLong()
-            }
-            val time = (min * 60 * 1000) + (sec * 1000) + ms
-            val text = match.groupValues[4].trim()
+            val secParts = match.groupValues[2].split(".")
+            val sec = secParts[0].toLong()
+            val ms = if (secParts.size > 1) {
+                val msPart = secParts[1]
+                when (msPart.length) {
+                    1 -> msPart.toLong() * 100
+                    2 -> msPart.toLong() * 10
+                    else -> msPart.take(3).toLong()
+                }
+            } else 0L
+            (min * 60 * 1000) + (sec * 1000) + ms
+        }.toList()
+
+        if (timestamps.isNotEmpty()) {
+            // extract text after the last timestamp
+            val lastTimestamp = lrcTimestampRegex.findAll(line).last()
+            val text = line.substring(lastTimestamp.range.last + 1).trim()
             if (text.isNotBlank()) {
-                lines.add(LyricsLine(time, text))
-            }
-        } else {
-            // try the simpler format without milliseconds
-            val matchAlt = lrcAltRegex.find(line)
-            if (matchAlt != null) {
-                val min = matchAlt.groupValues[1].toLong()
-                val sec = matchAlt.groupValues[2].toLong()
-                val time = (min * 60 * 1000) + (sec * 1000)
-                val text = matchAlt.groupValues[3].trim()
-                if (text.isNotBlank()) {
-                    lines.add(LyricsLine(time, text))
+                // add a line for each timestamp
+                timestamps.forEach { time ->
+                    lines.add(LyricsLine(time, decodeHtmlEntities(text)))
                 }
             }
         }
     }
     return lines.sortedBy { it.time } // gotta sort by time or everything breaks
+}
+
+private fun decodeHtmlEntities(text: String): String {
+    return text
+        .replace("&#39;", "'")
+        .replace("&amp;", "&")
+        .replace("&quot;", "\"")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&apos;", "'")
 }
 
 // marquee text that scrolls when the song title is too long
