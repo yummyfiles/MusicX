@@ -102,6 +102,19 @@ fun MusicXApp(
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
                 Column {
+                    // Gradient fade at top of bottomBar: transparent to bottomBar color
+                    // Creates smooth transition from content to mini player
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, MusicXTheme.colors.bottomBar)
+                                )
+                            )
+                    )
+
                     MiniPlayer(
                         mediaController = mediaController,
                         onNavigateToNowPlaying = { backStack.add(Destination.NowPlaying) }
@@ -278,21 +291,6 @@ fun MusicXApp(
                             }
                         }
                     }
-                )
-            }
-
-            // Subtle fade gradient at bottom of content, sits above mini player
-            if (isMobile && currentDestination !is Destination.NowPlaying) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, MusicXTheme.colors.bottomBar)
-                            )
-                        )
                 )
             }
         }
