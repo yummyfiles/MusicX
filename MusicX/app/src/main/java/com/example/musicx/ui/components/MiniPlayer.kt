@@ -49,12 +49,11 @@ fun MiniPlayer(
         label = "SmoothProgress"
     )
     
-    // this polls the position every 500ms to update the progress bar
-    // tried doing it less often but it looked janky so 500ms it is
+    // gentle polling so the progress bar actually moves during playback
     LaunchedEffect(isPlaying) {
         if (isPlaying && mediaController != null) {
             while (true) {
-                delay(500)
+                delay(1000)
                 val dur = mediaController.duration.coerceAtLeast(0L).toFloat()
                 if (dur > 0) progress = mediaController.currentPosition.toFloat() / dur
             }
@@ -103,15 +102,6 @@ fun MiniPlayer(
         }
     }
 
-    val glowAlpha by animateFloatAsState(
-        targetValue = if (isPlaying) 0.15f else 0f,
-        animationSpec = if (isPlaying) infiniteRepeatable(
-            animation = tween(2000, easing = LinearOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ) else tween(300),
-        label = "MiniPlayerGlow"
-    )
-    
     val accentColor = MusicXTheme.colors.primaryAccent
 
     Surface(
@@ -128,7 +118,7 @@ fun MiniPlayer(
         color = MusicXTheme.colors.cardBackground,
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
-            color = if (isPlaying) accentColor.copy(alpha = glowAlpha)
+            color = if (isPlaying) accentColor.copy(alpha = 0.12f)
                     else MusicXTheme.colors.outline.copy(alpha = 0.2f)
         ),
         tonalElevation = 4.dp

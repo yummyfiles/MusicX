@@ -265,31 +265,12 @@ fun NowPlayingScreen(
                                 centerLyrics = generalSettings.centerLyrics
                             )
                         } else {
-                            val pulseAlpha by animateFloatAsState(
-                                targetValue = if (isPlaying) 0.12f else 0.05f,
-                                animationSpec = if (isPlaying) infiniteRepeatable(
-                                    animation = tween(3000, easing = FastOutSlowInEasing),
-                                    repeatMode = RepeatMode.Reverse
-                                ) else tween(500),
-                                label = "AlbumGlow"
-                            )
-                            val pulseScale by animateFloatAsState(
-                                targetValue = if (isPlaying) 1.05f else 1f,
-                                animationSpec = if (isPlaying) infiniteRepeatable(
-                                    animation = tween(3000, easing = FastOutSlowInEasing),
-                                    repeatMode = RepeatMode.Reverse
-                                ) else tween(500),
-                                label = "AlbumGlowScale"
-                            )
-
                             Box(
                                 modifier = Modifier
                                     .aspectRatio(1f)
                                     .fillMaxHeight(0.9f)
                                     .graphicsLayer {
-                                        scaleX = pulseScale
-                                        scaleY = pulseScale
-                                        alpha = pulseAlpha
+                                        alpha = 0.10f
                                     }
                                     .clip(CircleShape)
                                     .background(
