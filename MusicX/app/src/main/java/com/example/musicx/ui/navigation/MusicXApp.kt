@@ -1,6 +1,8 @@
 package com.example.musicx.ui.navigation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -8,7 +10,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.navigation3.ui.NavDisplay
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -97,21 +102,6 @@ fun MusicXApp(
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
                 Column {
-                    // Fade gradient spacer: transparent at top, fades to bottomBar
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .background(
-                                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                                    colors = listOf(
-                                        androidx.compose.ui.graphics.Color.Transparent,
-                                        MusicXTheme.colors.bottomBar
-                                    )
-                                )
-                            )
-                    )
-
                     MiniPlayer(
                         mediaController = mediaController,
                         onNavigateToNowPlaying = { backStack.add(Destination.NowPlaying) }
@@ -168,127 +158,143 @@ fun MusicXApp(
         containerColor = MusicXTheme.colors.primaryBackground,
         contentWindowInsets = WindowInsets(0, 0, 0, 0) // Fixed: Remove extra Scaffold insets
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding()) // Only bottom padding from Scaffold
-                .statusBarsPadding() // Fixed: Manual status bar padding
-        ) {
-            NavDisplay(
-                backStack = backStack,
-                modifier = Modifier.fillMaxSize(),
-                onBack = { popBackStack() },
-                entryProvider = { key ->
-                    when (val destination = key as Destination) {
-                        is Destination.Songs -> NavEntry(destination) {
-                            SongsScreen(
-                                viewModel = songsViewModel,
-                                mediaController = mediaController,
-                                onSongClick = playSong,
-                                onSongLongClick = { song ->
-                                    backStack.add(Destination.EditMetadata(song.id))
-                                },
-                                onEditMetadata = { songId ->
-                                    backStack.add(Destination.EditMetadata(songId))
-                                }
-                            )
-                        }
-                        is Destination.Playlists -> NavEntry(destination) { 
-                            PlaylistsScreen(
-                                viewModel = songsViewModel,
-                                onPlaylistClick = { playlistId ->
-                                    backStack.add(Destination.PlaylistDetail(playlistId))
-                                }
-                            ) 
-                        }
-                        is Destination.PlaylistDetail -> NavEntry(destination) {
-                            PlaylistDetailScreen(
-                                playlistId = destination.playlistId,
-                                viewModel = songsViewModel,
-                                onSongClick = playSong,
-                                onBack = { popBackStack() }
-                            )
-                        }
-                        is Destination.Import -> NavEntry(destination) { ImportScreen(songsViewModel) }
-                        is Destination.Search -> NavEntry(destination) { 
-                            SearchScreen(
-                                viewModel = songsViewModel,
-                                onSongClick = playSong
-                            )
-                        }
-                        is Destination.Settings -> NavEntry(destination) { 
-                            SettingsScreen(onNavigate = { backStack.add(it) }) 
-                        }
-                        is Destination.AppearanceSettings -> NavEntry(destination) {
-                            AppearanceSettingsScreen(
-                                viewModel = settingsViewModel,
-                                onBack = { popBackStack() }
-                            )
-                        }
-                        is Destination.AudioSettings -> NavEntry(destination) {
-                            AudioSettingsScreen(
-                                viewModel = settingsViewModel,
-                                onBack = { popBackStack() }
-                            )
-                        }
-                        is Destination.PlaybackSettings -> NavEntry(destination) {
-                            PlaybackSettingsScreen(
-                                viewModel = settingsViewModel,
-                                onBack = { popBackStack() }
-                            )
-                        }
-                        is Destination.LibrarySettings -> NavEntry(destination) {
-                            LibrarySettingsScreen(
-                                viewModel = settingsViewModel,
-                                onBack = { popBackStack() }
-                            )
-                        }
-                        is Destination.LyricsSettings -> NavEntry(destination) {
-                            LyricsSettingsScreen(
-                                viewModel = settingsViewModel,
-                                onBack = { popBackStack() }
-                            )
-                        }
-                        is Destination.VideoSettings -> NavEntry(destination) {
-                            VideoSettingsScreen(
-                                viewModel = settingsViewModel,
-                                onBack = { popBackStack() }
-                            )
-                        }
-                        is Destination.NowPlaying -> NavEntry(destination) {
-                            val songs by songsViewModel.songs.collectAsState()
-                            val generalSettings by settingsViewModel.generalSettings.collectAsState()
-                            val currentMediaId = mediaController?.currentMediaItem?.mediaId
-                            val currentSong = remember(songs, currentMediaId) {
-                                currentMediaId?.let { id -> songs.find { it.id.toString() == id } }
-                            }
-                            NowPlayingScreen(
-                                viewModel = songsViewModel,
-                                mediaController = mediaController,
-                                currentSong = currentSong,
-                                generalSettings = generalSettings,
-                                onBack = { popBackStack() }
-                            )
-                        }
-                        is Destination.EditMetadata -> NavEntry(destination) {
-                            val songs by songsViewModel.songs.collectAsState()
-                            val song = remember(songs, destination.songId) {
-                                songs.find { it.id == destination.songId }
-                            }
-                            if (song != null) {
-                                MetadataEditor(
-                                    song = song,
-                                    onSave = { title, artist, lyrics ->
-                                        songsViewModel.updateMetadata(song.mediaUri.toString(), title, artist, lyrics)
-                                        popBackStack()
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+            ) {
+                NavDisplay(
+                    backStack = backStack,
+                    modifier = Modifier.fillMaxSize(),
+                    onBack = { popBackStack() },
+                    entryProvider = { key ->
+                        when (val destination = key as Destination) {
+                            is Destination.Songs -> NavEntry(destination) {
+                                SongsScreen(
+                                    viewModel = songsViewModel,
+                                    mediaController = mediaController,
+                                    onSongClick = playSong,
+                                    onSongLongClick = { song ->
+                                        backStack.add(Destination.EditMetadata(song.id))
                                     },
+                                    onEditMetadata = { songId ->
+                                        backStack.add(Destination.EditMetadata(songId))
+                                    }
+                                )
+                            }
+                            is Destination.Playlists -> NavEntry(destination) { 
+                                PlaylistsScreen(
+                                    viewModel = songsViewModel,
+                                    onPlaylistClick = { playlistId ->
+                                        backStack.add(Destination.PlaylistDetail(playlistId))
+                                    }
+                                ) 
+                            }
+                            is Destination.PlaylistDetail -> NavEntry(destination) {
+                                PlaylistDetailScreen(
+                                    playlistId = destination.playlistId,
+                                    viewModel = songsViewModel,
+                                    onSongClick = playSong,
                                     onBack = { popBackStack() }
                                 )
                             }
+                            is Destination.Import -> NavEntry(destination) { ImportScreen(songsViewModel) }
+                            is Destination.Search -> NavEntry(destination) { 
+                                SearchScreen(
+                                    viewModel = songsViewModel,
+                                    onSongClick = playSong
+                                )
+                            }
+                            is Destination.Settings -> NavEntry(destination) { 
+                                SettingsScreen(onNavigate = { backStack.add(it) }) 
+                            }
+                            is Destination.AppearanceSettings -> NavEntry(destination) {
+                                AppearanceSettingsScreen(
+                                    viewModel = settingsViewModel,
+                                    onBack = { popBackStack() }
+                                )
+                            }
+                            is Destination.AudioSettings -> NavEntry(destination) {
+                                AudioSettingsScreen(
+                                    viewModel = settingsViewModel,
+                                    onBack = { popBackStack() }
+                                )
+                            }
+                            is Destination.PlaybackSettings -> NavEntry(destination) {
+                                PlaybackSettingsScreen(
+                                    viewModel = settingsViewModel,
+                                    onBack = { popBackStack() }
+                                )
+                            }
+                            is Destination.LibrarySettings -> NavEntry(destination) {
+                                LibrarySettingsScreen(
+                                    viewModel = settingsViewModel,
+                                    onBack = { popBackStack() }
+                                )
+                            }
+                            is Destination.LyricsSettings -> NavEntry(destination) {
+                                LyricsSettingsScreen(
+                                    viewModel = settingsViewModel,
+                                    onBack = { popBackStack() }
+                                )
+                            }
+                            is Destination.VideoSettings -> NavEntry(destination) {
+                                VideoSettingsScreen(
+                                    viewModel = settingsViewModel,
+                                    onBack = { popBackStack() }
+                                )
+                            }
+                            is Destination.NowPlaying -> NavEntry(destination) {
+                                val songs by songsViewModel.songs.collectAsState()
+                                val generalSettings by settingsViewModel.generalSettings.collectAsState()
+                                val currentMediaId = mediaController?.currentMediaItem?.mediaId
+                                val currentSong = remember(songs, currentMediaId) {
+                                    currentMediaId?.let { id -> songs.find { it.id.toString() == id } }
+                                }
+                                NowPlayingScreen(
+                                    viewModel = songsViewModel,
+                                    mediaController = mediaController,
+                                    currentSong = currentSong,
+                                    generalSettings = generalSettings,
+                                    onBack = { popBackStack() }
+                                )
+                            }
+                            is Destination.EditMetadata -> NavEntry(destination) {
+                                val songs by songsViewModel.songs.collectAsState()
+                                val song = remember(songs, destination.songId) {
+                                    songs.find { it.id == destination.songId }
+                                }
+                                if (song != null) {
+                                    MetadataEditor(
+                                        song = song,
+                                        onSave = { title, artist, lyrics ->
+                                            songsViewModel.updateMetadata(song.mediaUri.toString(), title, artist, lyrics)
+                                            popBackStack()
+                                        },
+                                        onBack = { popBackStack() }
+                                    )
+                                }
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
+
+            // Subtle fade gradient at bottom of content, sits above mini player
+            if (isMobile && currentDestination !is Destination.NowPlaying) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, MusicXTheme.colors.bottomBar)
+                            )
+                        )
+                )
+            }
         }
     }
 }
