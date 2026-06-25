@@ -101,20 +101,9 @@ fun MusicXApp(
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
-                Column {
-                    // Gradient fade at top of bottomBar: transparent to bottomBar color
-                    // Creates smooth transition from content to mini player
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, MusicXTheme.colors.bottomBar)
-                                )
-                            )
-                    )
-
+                Column(
+                    modifier = Modifier.background(MusicXTheme.colors.bottomBar)
+                ) {
                     MiniPlayer(
                         mediaController = mediaController,
                         onNavigateToNowPlaying = { backStack.add(Destination.NowPlaying) }
