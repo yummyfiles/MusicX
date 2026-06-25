@@ -4,7 +4,7 @@
 
 <br>
 
-<a href="https://github.com/yummyfiles/MusicX/releases/download/v0.1.0-alpha/MusicX-v1.0.apk">
+<a href="https://github.com/yummyfiles/MusicX/releases/latest">
   <img src="https://img.shields.io/badge/DOWNLOAD_APK-000000?style=for-the-badge&logo=android&logoColor=white&labelColor=000000&color=000000" alt="Download APK" />
 </a>
 
