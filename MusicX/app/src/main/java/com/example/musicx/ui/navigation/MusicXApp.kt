@@ -104,6 +104,19 @@ fun MusicXApp(
                 Column(
                     modifier = Modifier.background(MusicXTheme.colors.bottomBar)
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(24.dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        MusicXTheme.colors.bottomBar
+                                    )
+                                )
+                            )
+                    )
                     MiniPlayer(
                         mediaController = mediaController,
                         onNavigateToNowPlaying = { backStack.add(Destination.NowPlaying) }
@@ -165,6 +178,8 @@ fun MusicXApp(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .imePadding()
             ) {
                 NavDisplay(
                     backStack = backStack,

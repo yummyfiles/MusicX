@@ -25,7 +25,6 @@ fun MetadataEditor(
 ) {
     var title by remember { mutableStateOf(song.title) }
     var artist by remember { mutableStateOf(song.artist) }
-    var lyrics by remember { mutableStateOf(song.lyrics ?: "") }
 
     Scaffold(
         topBar = {
@@ -90,26 +89,10 @@ fun MetadataEditor(
                 )
             )
 
-            Text("Lyrics (Offline)", color = MusicXTheme.colors.secondaryText, style = MaterialTheme.typography.labelMedium)
-            TextField(
-                value = lyrics,
-                onValueChange = { lyrics = it },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp),
-                placeholder = { Text("Paste lyrics here...", color = MusicXTheme.colors.inputHint) },
-                colors = TextFieldDefaults.colors(
-                    focusedTextColor = MusicXTheme.colors.primaryText,
-                    unfocusedTextColor = MusicXTheme.colors.primaryText,
-                    focusedContainerColor = MusicXTheme.colors.inputBackground,
-                    unfocusedContainerColor = MusicXTheme.colors.inputBackground,
-                    focusedIndicatorColor = MusicXTheme.colors.primaryAccent,
-                    unfocusedIndicatorColor = MusicXTheme.colors.outlineVariant
-                )
-            )
-
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { onSave(title, artist, lyrics.ifBlank { null }) },
+                onClick = { onSave(title, artist, song.lyrics) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

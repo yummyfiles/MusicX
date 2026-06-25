@@ -73,13 +73,12 @@ fun ImportScreen(viewModel: SongsViewModel) {
         },
         containerColor = MusicXTheme.colors.primaryBackground
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            contentAlignment = Alignment.Center
         ) {
             ImportCard(
                 title = "Local Files",

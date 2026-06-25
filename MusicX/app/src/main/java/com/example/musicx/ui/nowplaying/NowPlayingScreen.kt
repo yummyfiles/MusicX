@@ -765,8 +765,14 @@ private fun SeekBarSection(
     var isDragging by remember { mutableStateOf(false) }
     var dragPosition by remember { mutableFloatStateOf(0f) }
 
+    val animatedProgress by animateFloatAsState(
+        targetValue = progressFraction,
+        animationSpec = tween(100, easing = LinearEasing),
+        label = "ProgressSmooth"
+    )
+
     Column(modifier = Modifier.fillMaxWidth()) {
-        val sliderValue = if (isDragging) dragPosition else progressFraction
+        val sliderValue = if (isDragging) dragPosition else animatedProgress
         val displayPosition = if (isDragging) formatTime((dragPosition * duration).toLong()) else formattedPosition
 
         Slider(
