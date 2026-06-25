@@ -29,6 +29,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.example.musicx.data.local.entity.Playlist
 import com.example.musicx.model.Song
 import com.example.musicx.ui.theme.MusicXTheme
@@ -255,7 +257,11 @@ fun SongItem(
         ) {
             if (song.albumArtUri != null) {
                 AsyncImage(
-                    model = song.albumArtUri,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(song.albumArtUri)
+                        .size(128)
+                        .crossfade(false)
+                        .build(),
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()

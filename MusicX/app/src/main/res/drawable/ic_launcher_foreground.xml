@@ -1,20 +1,6 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <group
-        android:pivotX="54"
-        android:pivotY="54"
-        android:scaleX="0.72"
-        android:scaleY="0.72">
-        <!-- Stylized X -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M32,32 L44,32 L54,44 L64,32 L76,32 L60,54 L76,76 L64,76 L54,64 L44,76 L32,76 L48,54 Z" />
-        <!-- Play button in the center -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M46,42 L62,54 L46,66 Z" />
-    </group>
-</vector>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_launcher_foreground_src"
+    android:insetLeft="18dp"
+    android:insetRight="18dp"
+    android:insetTop="18dp"
+    android:insetBottom="18dp" />
