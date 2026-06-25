@@ -61,47 +61,33 @@ class MusicRepository(private val context: Context) {
     // loads all the songs from the library and mediastore
     // this was painful to write ngl, so many edge cases
     suspend fun fetchLocalSongs(): List<Song> = withContext(Dispatchers.IO) {
-        val songs = mutableListOf<Song>()
-        
-        // get all the metadata overrides and ignored songs at once
-        // way faster than querying them one by one
-        val overrides = try {
-            metadataOverrideDao.getAllOverrides().firstOrNull()?.associateBy { it.songUri } ?: emptyMap()
+        // parallelize Room DB queries for speed
+        val (overrides, ignoredUris, librarySongs) = try {
+            val overridesDef = async { metadataOverrideDao.getAllOverridesList() }
+            val ignoredDef = async { ignoredSongDao.getAllIgnoredUrisList() }
+            val libraryDef = async { librarySongDao.getAllSongsList() }
+            Triple(
+                overridesDef.await().associateBy { it.songUri },
+                ignoredDef.await().toSet(),
+                libraryDef.await()
+            )
         } catch (e: Exception) {
-            android.util.Log.e("MusicRepository", "Failed to fetch overrides", e)
-            emptyMap()
+            android.util.Log.e("MusicRepository", "Failed to fetch library data", e)
+            Triple(emptyMap(), emptySet(), emptyList())
         }
 
-        val ignoredUris = try {
-            ignoredSongDao.getAllIgnoredUris().firstOrNull()?.toSet() ?: emptySet()
-        } catch (e: Exception) {
-            android.util.Log.e("MusicRepository", "Failed to fetch ignored URIs", e)
-            emptySet()
-        }
-
-        // first get songs from our internal library (Room database)
-        val librarySongs = try {
-            librarySongDao.getAllSongs().firstOrNull() ?: emptyList()
-        } catch (e: Exception) {
-            android.util.Log.e("MusicRepository", "Failed to fetch library songs", e)
-            emptyList()
-        }
-        
-        val validLibrarySongs = mutableListOf<LibrarySong>()
-        val brokenUris = mutableListOf<String>() // track broken files so we can clean them up
+        val songs = ArrayList<Song>(librarySongs.size + 64)
+        val validLibraryUris = HashSet<String>(librarySongs.size)
+        val brokenUris = ArrayList<String>()
 
         librarySongs.forEach { libSong ->
-            // skip google docs files, they dont work for some reason
             if (libSong.uri.contains("com.google.android.apps.docs")) {
                 brokenUris.add(libSong.uri)
                 return@forEach
             }
-
             if (ignoredUris.contains(libSong.uri)) return@forEach
 
             val uri = libSong.uri.toUri()
-            
-            // check if the file actually exists
             if (libSong.uri.startsWith("file://")) {
                 val path = uri.path
                 if (path == null || !File(path).exists()) {
@@ -110,39 +96,38 @@ class MusicRepository(private val context: Context) {
                 }
             }
 
-            validLibrarySongs.add(libSong)
+            validLibraryUris.add(libSong.uri)
             val override = overrides[libSong.uri]
-            val cleanTitle: String
-            val cleanArtist: String
             if (override != null) {
-                cleanTitle = override.customTitle ?: libSong.title
-                cleanArtist = override.customArtist ?: libSong.artist
+                songs.add(Song(
+                    id = libSong.uri.hashCode().toLong(),
+                    title = override.customTitle ?: libSong.title,
+                    artist = override.customArtist ?: libSong.artist,
+                    duration = libSong.duration,
+                    mediaUri = uri,
+                    albumArtUri = libSong.albumArtUri?.toUri(),
+                    lyrics = override.customLyrics ?: libSong.lyrics
+                ))
             } else {
                 val parsed = MetadataCleaner.clean(
                     rawTitle = libSong.title,
                     rawArtist = libSong.artist
                 )
-                cleanTitle = parsed.title
-                cleanArtist = parsed.artist
-            }
-            songs.add(
-                Song(
+                songs.add(Song(
                     id = libSong.uri.hashCode().toLong(),
-                    title = cleanTitle,
-                    artist = cleanArtist,
+                    title = parsed.title,
+                    artist = parsed.artist,
                     duration = libSong.duration,
                     mediaUri = uri,
                     albumArtUri = libSong.albumArtUri?.toUri(),
-                    lyrics = override?.customLyrics ?: libSong.lyrics
-                )
-            )
+                    lyrics = libSong.lyrics
+                ))
+            }
         }
 
         if (brokenUris.isNotEmpty()) {
             librarySongDao.deleteSongsByUri(brokenUris)
         }
-
-        val internalMusicUris = validLibrarySongs.asSequence().map { it.uri }.toSet()
 
         // 2. Fetch from MediaStore (skip tracks shorter than 5 seconds)
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
@@ -159,68 +144,52 @@ class MusicRepository(private val context: Context) {
 
         try {
             context.contentResolver.query(
-                collection,
-                projection,
-                selection,
-                null,
-                sortOrder
+                collection, projection, selection, null, sortOrder
             )?.use { cursor ->
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-                val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-                val artistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-                val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-                val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
-                val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
+                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+                val titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+                val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
+                val durCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+                val albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+                val dispCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
 
                 while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idColumn)
-                    val originalTitle = cursor.getString(titleColumn) ?: "Unknown"
-                    val originalArtist = cursor.getString(artistColumn) ?: "Unknown"
-                    val duration = cursor.getLong(durationColumn)
-                    val albumId = cursor.getLong(albumIdColumn)
+                    val id = cursor.getLong(idCol)
+                    val uriStr = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id).toString()
+                    if (ignoredUris.contains(uriStr) || validLibraryUris.contains(uriStr)) continue
 
-                    val contentUri = ContentUris.withAppendedId(
-                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                        id
-                    )
-                    
-                    val uriStr = contentUri.toString()
-                    if (ignoredUris.contains(uriStr) || internalMusicUris.contains(uriStr)) continue
+                    val originalTitle = cursor.getString(titleCol) ?: "Unknown"
+                    val originalArtist = cursor.getString(artistCol) ?: "Unknown"
+                    val duration = cursor.getLong(durCol)
+                    val albumId = cursor.getLong(albumCol)
 
                     val override = overrides[uriStr]
-                    val cleanTitle: String
-                    val cleanArtist: String
                     if (override != null) {
-                        cleanTitle = override.customTitle ?: originalTitle
-                        cleanArtist = override.customArtist ?: originalArtist
+                        songs.add(Song(id, override.customTitle ?: originalTitle, override.customArtist ?: originalArtist, duration,
+                            ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id),
+                            ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), albumId),
+                            override.customLyrics))
                     } else {
-                        val displayName = cursor.getString(displayNameColumn)
+                        val displayName = cursor.getString(dispCol)
                         val parsed = MetadataCleaner.clean(
-                            rawTitle = originalTitle,
-                            rawArtist = originalArtist,
+                            rawTitle = originalTitle, rawArtist = originalArtist,
                             fileNameWithoutExtension = displayName?.substringBeforeLast(".")
                         )
-                        cleanTitle = parsed.title
-                        cleanArtist = parsed.artist
+                        songs.add(Song(id, parsed.title, parsed.artist, duration,
+                            ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id),
+                            ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), albumId),
+                            null))
                     }
-
-                    val albumArtUri = ContentUris.withAppendedId(
-                        "content://media/external/audio/albumart".toUri(),
-                        albumId
-                    )
-
-                    songs.add(Song(id, cleanTitle, cleanArtist, duration, contentUri, albumArtUri, override?.customLyrics))
                 }
             }
         } catch (e: Exception) {
             android.util.Log.e("MusicRepository", "Error querying MediaStore", e)
         }
 
-        // Efficient de-duplication using HashSet (avoids creating intermediate lists)
+        // dedup and sort
         val seen = HashSet<String>(songs.size)
-        val distinctSongs = songs.filter { seen.add("${it.title.lowercase().trim()}|${it.artist.lowercase().trim()}") }
-
-        distinctSongs.sortedBy { it.title }
+        songs.filter { seen.add("${it.title.lowercase()}|${it.artist.lowercase()}") }
+            .sortedBy { it.title }
     }
 
     suspend fun importSongs(uris: List<Uri>) = withContext(Dispatchers.IO) {

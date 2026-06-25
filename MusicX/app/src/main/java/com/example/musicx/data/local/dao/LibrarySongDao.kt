@@ -9,6 +9,9 @@ interface LibrarySongDao {
     @Query("SELECT * FROM library_songs")
     fun getAllSongs(): Flow<List<LibrarySong>>
 
+    @Query("SELECT * FROM library_songs")
+    suspend fun getAllSongsList(): List<LibrarySong>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSongs(songs: List<LibrarySong>)
 

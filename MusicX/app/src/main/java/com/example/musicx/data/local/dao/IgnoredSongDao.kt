@@ -9,6 +9,9 @@ interface IgnoredSongDao {
     @Query("SELECT uri FROM ignored_songs")
     fun getAllIgnoredUris(): Flow<List<String>>
 
+    @Query("SELECT uri FROM ignored_songs")
+    suspend fun getAllIgnoredUrisList(): List<String>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertIgnoredSongs(songs: List<IgnoredSong>)
 

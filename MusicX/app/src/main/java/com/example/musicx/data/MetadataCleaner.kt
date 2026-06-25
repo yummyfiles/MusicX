@@ -5,6 +5,27 @@ package com.example.musicx.data
 // becomes: Unholy Hymn - FabvL
 object MetadataCleaner {
 
+    private val quotedRegex = Regex("""[""]([^""]+)[""]""")
+    private val bracketTagRegex = Regex("""\[[^\]]*\]""")
+    private val parenTagRegex = Regex("""\([^)]*\)""")
+    private val junkPatterns = listOf(
+        Regex("""\bofficial\s+music\s+video\b""", RegexOption.IGNORE_CASE),
+        Regex("""\bofficial\s+lyric\s+video\b""", RegexOption.IGNORE_CASE),
+        Regex("""\blyric\s+video\b""", RegexOption.IGNORE_CASE),
+        Regex("""\blyrics?\b""", RegexOption.IGNORE_CASE),
+        Regex("""\bvisualizer\b""", RegexOption.IGNORE_CASE),
+        Regex("""\bofficial\s+audio\b""", RegexOption.IGNORE_CASE),
+        Regex("""\bAMV\b""", RegexOption.IGNORE_CASE),
+        Regex("""\baudio\b""", RegexOption.IGNORE_CASE),
+        Regex("""\bmusic\s+video\b""", RegexOption.IGNORE_CASE)
+    )
+    private val trailingBracketRegex = Regex("""\[[^\]]*\]\s*$""")
+    private val trailingParenRegex = Regex("""\([^)]*\)\s*$""")
+    private val emptyBracketRegex = Regex("""\s*\(\)""")
+    private val emptySquareRegex = Regex("""\s*\[\]""")
+    private val multiSpaceRegex = Regex("""\s+""")
+    private val emptyAtEndRegex = Regex("""\s*\(\)\s*$|\s*\[\]\s*$""")
+
     data class CleanMetadata(
         val title: String,
         val artist: String
@@ -24,7 +45,7 @@ object MetadataCleaner {
 
         // first try to grab the title inside quotes
         // nerdcore songs love doing this for some reason
-        val quoted = Regex("""[""]([^""]+)[""]""").find(originalForParsing)
+        val quoted = quotedRegex.find(originalForParsing)
         if (quoted != null) {
             title = quoted.groupValues[1].trim()
         }
@@ -33,8 +54,8 @@ object MetadataCleaner {
         if (originalForParsing.contains("|")) {
             val parts = originalForParsing.split("|", limit = 2)
             val artistPart = parts[1].trim()
-                .replace(Regex("""\[[^\]]*\]"""), "")
-                .replace(Regex("""\([^)]*\)"""), "")
+                .replace(bracketTagRegex, "")
+                .replace(parenTagRegex, "")
                 .trim()
             if (artistPart.isNotBlank()) {
                 artist = artistPart
@@ -94,36 +115,24 @@ object MetadataCleaner {
     private fun cleanJunk(input: String): String {
         var result = input.trim()
 
-        // remove common youtube/lyric junk (case insensitive)
-        val junkPatterns = listOf(
-            Regex("""\bofficial\s+music\s+video\b""", RegexOption.IGNORE_CASE),
-            Regex("""\bofficial\s+lyric\s+video\b""", RegexOption.IGNORE_CASE),
-            Regex("""\blyric\s+video\b""", RegexOption.IGNORE_CASE),
-            Regex("""\blyrics?\b""", RegexOption.IGNORE_CASE),
-            Regex("""\bvisualizer\b""", RegexOption.IGNORE_CASE),
-            Regex("""\bofficial\s+audio\b""", RegexOption.IGNORE_CASE),
-            Regex("""\bAMV\b""", RegexOption.IGNORE_CASE),
-            Regex("""\baudio\b""", RegexOption.IGNORE_CASE),
-            Regex("""\bmusic\s+video\b""", RegexOption.IGNORE_CASE)
-        )
         for (pattern in junkPatterns) {
             result = pattern.replace(result, "").trim()
         }
 
         // strip trailing brackets like [Demon Slayer] and (Official Video)
         result = result
-            .replace(Regex("""\[[^\]]*\]\s*$"""), "")
-            .replace(Regex("""\([^)]*\)\s*$"""), "")
+            .replace(trailingBracketRegex, "")
+            .replace(trailingParenRegex, "")
             .trim()
 
         // clean up any leftover empty brackets
         result = result
-            .replace(Regex("""\s*\(\)"""), "")
-            .replace(Regex("""\s*\[\]"""), "")
+            .replace(emptyBracketRegex, "")
+            .replace(emptySquareRegex, "")
             .trim()
 
         // remove multiple spaces
-        result = result.replace(Regex("""\s+"""), " ").trim()
+        result = result.replace(multiSpaceRegex, " ").trim()
 
         return result
     }

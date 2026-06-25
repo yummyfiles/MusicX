@@ -369,8 +369,9 @@ fun PlaylistSelectionDialog(
 }
 
 private val featRegex = Regex("(?i)(?:ft\\.|feat\\.|featuring)\\s*(.*)")
-private val officialTagRegex = Regex("(?i)(?:\\(official[^)]*\\)|\\[official[^]]*])")
-private val charsToRemove = setOf('|', '\\', '(', ')', '"', '[', ']')
+private val officialTagRegex = Regex("(?i)(?:\\(official[^)]*\\)|\\[official[^)]*])")
+private val charsToRemoveRegex = Regex("""[|\\()"\[\]]""")
+private val multiSpaceRegex = Regex("\\s+")
 
 fun processSongDisplay(title: String, artist: String): Pair<String, String> {
     var cleanTitle = title
@@ -383,9 +384,9 @@ fun processSongDisplay(title: String, artist: String): Pair<String, String> {
         cleanArtist = "$cleanArtist $feature"
     }
 
-    cleanTitle = cleanTitle.filter { it !in charsToRemove }.trim()
-    cleanTitle = cleanTitle.replace(officialTagRegex, "").trim()
-    cleanTitle = cleanTitle.replace('_', ' ').replace(Regex("\\s+"), " ").trim()
+    cleanTitle = charsToRemoveRegex.replace(cleanTitle, "").trim()
+    cleanTitle = officialTagRegex.replace(cleanTitle, "").trim()
+    cleanTitle = cleanTitle.replace('_', ' ').replace(multiSpaceRegex, " ").trim()
 
     return Pair(cleanTitle, cleanArtist)
 }

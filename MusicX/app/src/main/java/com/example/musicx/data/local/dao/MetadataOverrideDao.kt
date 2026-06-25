@@ -9,6 +9,9 @@ interface MetadataOverrideDao {
     @Query("SELECT * FROM metadata_overrides")
     fun getAllOverrides(): Flow<List<MetadataOverride>>
 
+    @Query("SELECT * FROM metadata_overrides")
+    suspend fun getAllOverridesList(): List<MetadataOverride>
+
     @Query("SELECT * FROM metadata_overrides WHERE songUri = :uri")
     suspend fun getOverrideByUri(uri: String): MetadataOverride?
 
