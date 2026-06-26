@@ -109,14 +109,13 @@ class MusicRepository(private val context: Context) {
                     lyrics = override.customLyrics ?: libSong.lyrics
                 ))
             } else {
-                val parsed = MetadataCleaner.clean(
-                    rawTitle = libSong.title,
-                    rawArtist = libSong.artist
-                )
+                // keep the raw title because youtube metadata is cursed
+                // restore old titles if the last build cooked them
+                val recovered = recoverDisplayTitleFromPath(libSong.uri)
                 songs.add(Song(
                     id = libSong.uri.hashCode().toLong(),
-                    title = parsed.title,
-                    artist = parsed.artist,
+                    title = recovered ?: libSong.title,
+                    artist = libSong.artist,
                     duration = libSong.duration,
                     mediaUri = uri,
                     albumArtUri = libSong.albumArtUri?.toUri(),
@@ -170,12 +169,8 @@ class MusicRepository(private val context: Context) {
                             ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), albumId),
                             override.customLyrics))
                     } else {
-                        val displayName = cursor.getString(dispCol)
-                        val parsed = MetadataCleaner.clean(
-                            rawTitle = originalTitle, rawArtist = originalArtist,
-                            fileNameWithoutExtension = displayName?.substringBeforeLast(".")
-                        )
-                        songs.add(Song(id, parsed.title, parsed.artist, duration,
+                        // keep the raw title, no spacer crimes this time
+                        songs.add(Song(id, originalTitle, originalArtist, duration,
                             ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id),
                             ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), albumId),
                             null))
@@ -268,14 +263,13 @@ class MusicRepository(private val context: Context) {
                         ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
                     val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
                 
-                    val cleanName = realName.substringBeforeLast(".")
-                    val parsed = MetadataCleaner.clean(
-                        rawTitle = title?.takeIf { !it.contains("encoded=") && !it.contains("acc=") },
-                        rawArtist = artist,
-                        fileNameWithoutExtension = cleanName
-                    )
-                    title = parsed.title
-                    artist = parsed.artist
+                    // keep the raw title, dont clean it for display
+                    // only fall back to filename if metadata is completely empty
+                    if (title?.contains("encoded=") == true || title?.contains("acc=") == true) {
+                        title = null
+                    }
+                    if (title.isNullOrBlank()) title = realName.substringBeforeLast(".")
+                    if (artist.isNullOrBlank()) artist = "Unknown Artist"
 
                     val artworkBytes = retriever.embeddedPicture
                     var internalArtUri: String? = null
@@ -306,6 +300,28 @@ class MusicRepository(private val context: Context) {
             librarySongDao.insertSongs(librarySongs)
             ignoredSongDao.removeIgnoredSongs(librarySongs.map { it.uri })
         }
+    }
+
+    // restore old titles if the last build cooked them
+    // internal files are named music_TIMESTAMP_original_name
+    // we strip the prefix and recover the real display title
+    private fun recoverDisplayTitleFromPath(uriStr: String): String? {
+        if (!uriStr.startsWith("file://")) return null
+        val path = Uri.parse(uriStr).path ?: return null
+        val fileName = java.io.File(path).name
+        val internalPrefix = Regex("""^music_\d+_""")
+        val match = internalPrefix.find(fileName) ?: return null
+        val restored = fileName.substring(match.value.length)
+            .substringBeforeLast(".")  // remove extension
+            .replace("_", " ")         // underscores to spaces
+            .trim()
+        // only use if it has special characters that suggest a real formatted title
+        // special characters are part of the title, not permission to start surgery
+        if (restored.any { it in "\"\"“”|[]():\\-" }) {
+            return restored
+        }
+        // if no special chars but different from stored title, still use it
+        return restored
     }
 
     private fun calculateHash(uri: Uri): String {
@@ -372,7 +388,9 @@ class MusicRepository(private val context: Context) {
     
     // automatically fetch lyrics for a song - tries multiple sources
     suspend fun autoFetchLyrics(song: Song): String? = withContext(Dispatchers.IO) {
-        val lyrics = lyricsFetcher.fetchLyrics(song.artist, song.title)
+        // clean the title for lookup only, display stays raw
+        val lookup = MetadataCleaner.cleanForLyricsLookup(song.title, song.artist)
+        val lyrics = lyricsFetcher.fetchLyrics(lookup.artist, lookup.title)
         if (lyrics != null) {
             updateMetadata(song.mediaUri.toString(), song.title, song.artist, lyrics)
             librarySongDao.updateLyrics(song.mediaUri.toString(), lyrics)
@@ -395,7 +413,9 @@ class MusicRepository(private val context: Context) {
             async {
                 semaphore.acquire()
                 try {
-                    val lyrics = lyricsFetcher.fetchLyrics(song.artist, song.title)
+                    // clean for lookup, keep the raw title visible
+                    val lookup = MetadataCleaner.cleanForLyricsLookup(song.title, song.artist)
+                    val lyrics = lyricsFetcher.fetchLyrics(lookup.artist, lookup.title)
                     if (lyrics != null) {
                         librarySongDao.updateLyrics(song.uri, lyrics)
                         android.util.Log.d("MusicRepository", "Synced lyrics for: ${song.title}")

@@ -104,19 +104,6 @@ fun MusicXApp(
                 Column(
                     modifier = Modifier.background(MusicXTheme.colors.bottomBar)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(24.dp)
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        MusicXTheme.colors.bottomBar
-                                    )
-                                )
-                            )
-                    )
                     MiniPlayer(
                         mediaController = mediaController,
                         onNavigateToNowPlaying = { backStack.add(Destination.NowPlaying) }
@@ -178,8 +165,7 @@ fun MusicXApp(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
-                    .navigationBarsPadding()
-                    .imePadding()
+                    .padding(bottom = innerPadding.calculateBottomPadding())
             ) {
                 NavDisplay(
                     backStack = backStack,
@@ -297,6 +283,20 @@ fun MusicXApp(
                     }
                 )
             }
+
+            // gradient is visual only, dont let it make the bottom bar taller
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = innerPadding.calculateBottomPadding())
+                    .fillMaxWidth()
+                    .height(24.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, MusicXTheme.colors.bottomBar)
+                        )
+                    )
+            )
         }
     }
 }

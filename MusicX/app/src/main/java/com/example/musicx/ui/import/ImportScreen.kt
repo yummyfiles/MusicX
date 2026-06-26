@@ -100,6 +100,7 @@ fun ImportCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .widthIn(max = 420.dp)
             .height(260.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MusicXTheme.colors.cardBackground),

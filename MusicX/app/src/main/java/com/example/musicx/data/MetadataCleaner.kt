@@ -103,6 +103,55 @@ object MetadataCleaner {
         return CleanMetadata(title = title.trim(), artist = artist.trim())
     }
 
+    // this version is only for lyrics lookup, not display
+    // keeps the raw titles visible but extracts what we need for searching
+    fun cleanForLyricsLookup(rawTitle: String, rawArtist: String): CleanMetadata {
+        var title = rawTitle.trim()
+        var artist = rawArtist.trim()
+        val originalForParsing = title
+
+        // grab the title inside quotes - that's usually the real song name
+        val quoted = quotedRegex.find(originalForParsing)
+        if (quoted != null) {
+            title = quoted.groupValues[1].trim()
+        }
+
+        // pipe usually splits title | artist
+        if (originalForParsing.contains("|")) {
+            val parts = originalForParsing.split("|", limit = 2)
+            val artistPart = parts[1].trim()
+                .replace(bracketTagRegex, "")
+                .replace(parenTagRegex, "")
+                .trim()
+            if (artistPart.isNotBlank()) {
+                artist = artistPart
+            }
+            if (quoted == null) {
+                title = parts[0].trim()
+            }
+        }
+
+        // if we still have " - " and artist is still the original, try splitting
+        if (title.contains(" - ") && artist == rawArtist.trim()) {
+            val nameParts = title.split(" - ", limit = 2)
+            val possibleArtist = nameParts[0].trim()
+            val possibleTitle = nameParts[1].trim()
+            if (possibleTitle.isNotBlank()) {
+                artist = possibleArtist
+                title = possibleTitle
+            }
+        }
+
+        // remove youtube/lyrics junk
+        title = cleanJunk(title)
+        artist = cleanJunk(artist)
+
+        if (title.isBlank()) title = "Unknown Title"
+        if (artist.isBlank()) artist = "Unknown Artist"
+
+        return CleanMetadata(title = title.trim(), artist = artist.trim())
+    }
+
     // checks if a value counts as unknown
     private fun isUnknown(value: String): Boolean {
         return value.isBlank() ||
