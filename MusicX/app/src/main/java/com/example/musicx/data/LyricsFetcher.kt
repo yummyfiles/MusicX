@@ -44,7 +44,7 @@ class LyricsFetcher {
     }
 
     private val client get() = sharedClient
-    private val USER_AGENT = "MusicX/1.4.4 (https://github.com/yummyfiles/MusicX)"
+    private val USER_AGENT = "MusicX/1.4.5 (https://github.com/yummyfiles/MusicX)"
 
     // main entry point - generates candidates and tries lrclib endpoints
     suspend fun fetchLyrics(

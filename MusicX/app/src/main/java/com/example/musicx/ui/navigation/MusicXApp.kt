@@ -101,13 +101,14 @@ fun MusicXApp(
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
-                Column(
-                    modifier = Modifier.background(MusicXTheme.colors.bottomBar)
-                ) {
-                    MiniPlayer(
-                        mediaController = mediaController,
-                        onNavigateToNowPlaying = { backStack.add(Destination.NowPlaying) }
-                    )
+                Column {
+                    // black bg only lives behind the miniplayer
+                    Box(modifier = Modifier.background(MusicXTheme.colors.bottomBar)) {
+                        MiniPlayer(
+                            mediaController = mediaController,
+                            onNavigateToNowPlaying = { backStack.add(Destination.NowPlaying) }
+                        )
+                    }
                     NavigationBar(
                         containerColor = MusicXTheme.colors.bottomBar,
                         tonalElevation = 0.dp,
@@ -284,11 +285,11 @@ fun MusicXApp(
                 )
             }
 
-            // gradient is visual only, dont let it make the bottom bar taller
+            // fade the songs out before the miniplayer eats them
+            // visual overlay only, not layout
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = innerPadding.calculateBottomPadding())
                     .fillMaxWidth()
                     .height(24.dp)
                     .background(
