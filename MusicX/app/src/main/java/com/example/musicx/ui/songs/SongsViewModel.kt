@@ -117,12 +117,6 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
         }
     }
     
-    // update the Genius API key used for fetching lyrics
-    // gets called from MainActivity when user changes it in settings
-    fun updateGeniusApiKey(key: String) {
-        repository.updateGeniusApiKey(key)
-    }
-
     fun autoFetchLyrics(song: Song) {
         viewModelScope.launch {
             val fetchedLyrics = repository.autoFetchLyrics(song)

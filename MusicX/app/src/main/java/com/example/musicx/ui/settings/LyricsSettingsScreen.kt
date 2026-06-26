@@ -8,8 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.musicx.ui.theme.MusicXTheme
 
@@ -69,17 +67,6 @@ fun LyricsSettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
             }
 
             item {
-                Text("Genius API", color = MusicXTheme.colors.primaryAccent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            }
-
-            item {
-                GeniusApiKeySetting(
-                    apiKey = settings.geniusApiKey,
-                    onValueChange = { newVal -> viewModel.updateGeneralSettings { it.copy(geniusApiKey = newVal) } }
-                )
-            }
-            
-            item {
                 Text("Appearance", color = MusicXTheme.colors.primaryAccent, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
@@ -101,52 +88,5 @@ fun LyricsSettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun GeniusApiKeySetting(apiKey: String, onValueChange: (String) -> Unit) {
-    var showKey by remember { mutableStateOf(false) }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = "Genius Access Token",
-            color = MusicXTheme.colors.primaryText,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Get yours at https://genius.com/developers. Improves lyric search reliability.",
-            color = MusicXTheme.colors.secondaryText,
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = apiKey,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
-            placeholder = { Text("Paste your Genius API key here...", color = MusicXTheme.colors.inputHint) },
-            singleLine = true,
-            trailingIcon = {
-                IconButton(onClick = { showKey = !showKey }) {
-                    Text(
-                        text = if (showKey) "HIDE" else "SHOW",
-                        color = MusicXTheme.colors.primaryAccent,
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MusicXTheme.colors.primaryText,
-                unfocusedTextColor = MusicXTheme.colors.primaryText,
-                cursorColor = MusicXTheme.colors.primaryAccent,
-                focusedBorderColor = MusicXTheme.colors.primaryAccent,
-                unfocusedBorderColor = MusicXTheme.colors.inputBorder,
-                focusedPlaceholderColor = MusicXTheme.colors.inputHint,
-                unfocusedPlaceholderColor = MusicXTheme.colors.inputHint
-            )
-        )
     }
 }

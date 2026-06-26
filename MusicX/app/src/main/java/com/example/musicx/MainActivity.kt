@@ -128,12 +128,6 @@ class MainActivity : ComponentActivity() {
                     }
 
                     if (audioPermissionState.allPermissionsGranted) {
-                        // sync Genius API key from settings to the lyrics fetcher
-                        val generalSettings by settingsViewModel.generalSettings.collectAsState()
-                        LaunchedEffect(generalSettings.geniusApiKey) {
-                            songsViewModel.updateGeniusApiKey(generalSettings.geniusApiKey)
-                        }
-
                         LaunchedEffect(Unit) {
                             songsViewModel.loadSongs()
                         }

@@ -52,12 +52,6 @@ class MusicRepository(private val context: Context) {
     private val ignoredSongDao = db.ignoredSongDao()
     private val lyricsFetcher = LyricsFetcher() // this guy fetches lyrics from the internet
 
-    // update the Genius API key used by the lyrics fetcher
-    // called when user changes their API key in settings
-    fun updateGeniusApiKey(key: String) {
-        lyricsFetcher.geniusApiKey = key
-    }
-
     // loads all the songs from the library and mediastore
     // this was painful to write ngl, so many edge cases
     suspend fun fetchLocalSongs(): List<Song> = withContext(Dispatchers.IO) {
@@ -386,16 +380,19 @@ class MusicRepository(private val context: Context) {
         }
     }
     
-    // automatically fetch lyrics for a song - tries multiple sources
+    // automatically fetch lyrics for a song - tries lrclib
     suspend fun autoFetchLyrics(song: Song): String? = withContext(Dispatchers.IO) {
-        // clean the title for lookup only, display stays raw
-        val lookup = MetadataCleaner.cleanForLyricsLookup(song.title, song.artist)
-        val lyrics = lyricsFetcher.fetchLyrics(lookup.artist, lookup.title)
-        if (lyrics != null) {
-            updateMetadata(song.mediaUri.toString(), song.title, song.artist, lyrics)
-            librarySongDao.updateLyrics(song.mediaUri.toString(), lyrics)
-        }
-        lyrics
+        // pass raw title/artist - LyricsFetcher handles its own candidate generation
+        val result = lyricsFetcher.fetchLyrics(
+            title = song.title,
+            artist = song.artist,
+            durationMs = song.duration
+        )
+        if (result != null) {
+            updateMetadata(song.mediaUri.toString(), song.title, song.artist, result.lyrics)
+            librarySongDao.updateLyrics(song.mediaUri.toString(), result.lyrics)
+            result.lyrics
+        } else null
     }
 
     // syncs lyrics for songs that dont have them yet
@@ -413,11 +410,13 @@ class MusicRepository(private val context: Context) {
             async {
                 semaphore.acquire()
                 try {
-                    // clean for lookup, keep the raw title visible
-                    val lookup = MetadataCleaner.cleanForLyricsLookup(song.title, song.artist)
-                    val lyrics = lyricsFetcher.fetchLyrics(lookup.artist, lookup.title)
-                    if (lyrics != null) {
-                        librarySongDao.updateLyrics(song.uri, lyrics)
+                    val result = lyricsFetcher.fetchLyrics(
+                        title = song.title,
+                        artist = song.artist,
+                        durationMs = song.duration
+                    )
+                    if (result != null) {
+                        librarySongDao.updateLyrics(song.uri, result.lyrics)
                         android.util.Log.d("MusicRepository", "Synced lyrics for: ${song.title}")
                     }
                 } catch (e: Exception) {
