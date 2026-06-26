@@ -10,7 +10,7 @@ import org.json.JSONObject
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
-// lrclib has the songs, we just need to ask better
+// lrclib has the songs, we were just asking badly
 // docs: https://lrclib.net/docs
 data class LyricsResult(
     val lyrics: String,
@@ -19,11 +19,9 @@ data class LyricsResult(
     val matchedArtist: String?
 )
 
-// build a few guesses because downloaded titles are cursed
 data class LookupCandidate(
     val title: String,
-    val artist: String,
-    val album: String? = null
+    val artist: String
 )
 
 class LyricsFetcher {
@@ -34,7 +32,8 @@ class LyricsFetcher {
             .build()
 
         private val quotedRegex = Regex("""[""]([^""]+)[""]""")
-        private val bracketParenRegex = Regex("""\[[^\]]*\]|\([^)]*\)""")
+        private val bracketParenOpenRegex = Regex("""\[[^\]]*\]""")
+        private val parenContentOpenRegex = Regex("""\([^)]*\)""")
         private val artistSplitRegex = Regex("""(?i)\s+(?:feat\.|ft\.|featuring|&|,|/|and)\s+""")
         private val multiSpaceRegex = Regex("\\s+")
         private val junkRegex = Regex(
@@ -44,138 +43,94 @@ class LyricsFetcher {
     }
 
     private val client get() = sharedClient
-    private val USER_AGENT = "MusicX/1.4.5 (https://github.com/yummyfiles/MusicX)"
+    private val USER_AGENT = "MusicX/1.4.6 (https://github.com/yummyfiles/MusicX)"
 
-    // main entry point - generates candidates and tries lrclib endpoints
     suspend fun fetchLyrics(
         title: String,
         artist: String,
         album: String? = null,
         durationMs: Long? = null
     ): LyricsResult? = withContext(Dispatchers.IO) {
-        val candidates = generateCandidates(title, artist)
+        val rawTitle = title.trim()
+        val rawArtist = artist.trim()
         val durationSec = durationMs?.let { (it / 1000).toInt() }
 
-        Log.d("LyricsFetcher", "looking up: \"$title\" by \"$artist\" " +
-                "album=$album duration=${durationSec}s " +
-                "candidates=${candidates.size}")
+        Log.d("LyricsFetcher", "looking up: \"$rawTitle\" by \"$rawArtist\" " +
+                "album=$album duration=${durationSec}s")
 
-        // step 1: try get-cached with each candidate (no external hits)
-        for (cand in candidates) {
-            val result = tryGetCached(cand.title, cand.artist, album, durationSec)
-            if (result != null) {
-                val score = scoreResult(result, cand.title, cand.artist, durationSec)
-                if (score >= 75) {
-                    Log.d("LyricsFetcher", "get-cached matched: \"${result.trackName}\" " +
-                            "by \"${result.artistName}\" score=$score synced=${result.syncedLyrics?.isNotBlank()}")
-                    return@withContext buildResult(result)
-                }
-                Log.d("LyricsFetcher", "get-cached low score=$score for \"${result.trackName}\" - skipping")
-            }
+        val candidates = generateCandidates(rawTitle, rawArtist)
+        Log.d("LyricsFetcher", "generated ${candidates.size} lookup candidates")
+        for ((i, c) in candidates.withIndex()) {
+            Log.d("LyricsFetcher", "  candidate $i: title=\"${c.title}\" artist=\"${c.artist}\"")
         }
 
-        // step 2: try get with each candidate (may hit external sources)
+        // clean this only for lookup, not display
+        val cleanedTitle = cleanForLookup(rawTitle)
+        val cleanedArtist = cleanForLookup(rawArtist)
+
+        // step 1: field search with track_name + artist_name for each candidate
+        // this is the most precise lrclib lookup
         for (cand in candidates) {
-            val result = tryGet(cand.title, cand.artist, album, durationSec)
-            if (result != null) {
-                val score = scoreResult(result, cand.title, cand.artist, durationSec)
-                if (score >= 75) {
-                    Log.d("LyricsFetcher", "get matched: \"${result.trackName}\" " +
-                            "by \"${result.artistName}\" score=$score")
-                    return@withContext buildResult(result)
-                }
-                Log.d("LyricsFetcher", "get low score=$score for \"${result.trackName}\" - skipping")
-            }
-        }
-
-        // step 3: build search queries and search
-        val searchQueries = buildSearchQueries(candidates)
-        val allResults = mutableListOf<LyricsResponse>()
-
-        for (query in searchQueries) {
-            val results = trySearch(query)
+            if (cand.title.isBlank() || cand.artist.isBlank()) continue
+            Log.d("LyricsFetcher", "trying LRCLIB field search: \"${cand.title}\" / \"${cand.artist}\"")
+            val results = tryFieldSearch(cand.title, cand.artist)
             if (results.isNotEmpty()) {
-                Log.d("LyricsFetcher", "search \"$query\" returned ${results.size} results")
-                allResults.addAll(results)
+                Log.d("LyricsFetcher", "LRCLIB field search returned ${results.size} results")
+                val best = pickBestResult(results, cleanedTitle, cleanedArtist, durationSec)
+                if (best != null) return@withContext best
             }
         }
 
-        if (allResults.isEmpty()) {
-            Log.d("LyricsFetcher", "no search results found")
-            return@withContext null
-        }
-
-        // deduplicate by id
-        val uniqueResults = allResults.distinctBy { it.id }
-
-        // group by normalized title
-        val resultsByTitle = mutableMapOf<String, MutableList<LyricsResponse>>()
-        for (r in uniqueResults) {
-            val nTitle = normalize(r.trackName)
-            resultsByTitle.getOrPut(nTitle) { mutableListOf() }.add(r)
-        }
-
-        if (resultsByTitle.size > 1) {
-            Log.d("LyricsFetcher", "multiple title groups found: ${resultsByTitle.size} different titles")
-        }
-
-        // for each title group, find best result
-        var bestWithArtist: Pair<LyricsResponse, Int>? = null
-        var bestOverall: Pair<LyricsResponse, Int>? = null
-
-        for ((nTitle, entries) in resultsByTitle) {
-            val scored = entries.map { it to scoreResult(it, title, artist, durationSec) }
-            val bestInGroup = scored.maxByOrNull { it.second } ?: continue
-            val aScore = artistMatchScore(artist, bestInGroup.first.artistName)
-
-            Log.d("LyricsFetcher", "title group \"$nTitle\": best=\"${bestInGroup.first.artistName}\" " +
-                    "score=${bestInGroup.second} artistScore=${String.format("%.2f", aScore)}")
-
-            if (aScore >= 0.5f && bestInGroup.second >= 65) {
-                if (bestWithArtist == null || bestInGroup.second > bestWithArtist.second) {
-                    bestWithArtist = bestInGroup
+        // step 2: field search with cleaned fallback title/artist
+        if (cleanedTitle.isNotBlank() && cleanedArtist.isNotBlank()) {
+            val fullClean = "$cleanedTitle $cleanedArtist"
+            if (candidates.none { it.title == cleanedTitle && it.artist == cleanedArtist }) {
+                Log.d("LyricsFetcher", "trying LRCLIB field search: \"$cleanedTitle\" / \"$cleanedArtist\"")
+                val results = tryFieldSearch(cleanedTitle, cleanedArtist)
+                if (results.isNotEmpty()) {
+                    Log.d("LyricsFetcher", "cleaned field search returned ${results.size} results")
+                    val best = pickBestResult(results, cleanedTitle, cleanedArtist, durationSec)
+                    if (best != null) return@withContext best
                 }
             }
-            if (bestOverall == null || bestInGroup.second > bestOverall.second) {
-                bestOverall = bestInGroup
+        }
+
+        // step 3: q search with "title artist" for each candidate
+        for (cand in candidates) {
+            val query = "${cand.title} ${cand.artist}".trim()
+            if (query.isBlank()) continue
+            Log.d("LyricsFetcher", "trying LRCLIB q search: \"$query\"")
+            val results = tryQSearch(query)
+            if (results.isNotEmpty()) {
+                Log.d("LyricsFetcher", "LRCLIB q search returned ${results.size} results")
+                val best = pickBestResult(results, cleanedTitle, cleanedArtist, durationSec)
+                if (best != null) return@withContext best
             }
         }
 
-        // prefer result with artist match
-        if (bestWithArtist != null) {
-            Log.d("LyricsFetcher", "selected result with artist match: " +
-                    "\"${bestWithArtist.first.trackName}\" by \"${bestWithArtist.first.artistName}\" " +
-                    "score=${bestWithArtist.second}")
-            return@withContext buildResult(bestWithArtist.first)
+        // step 4: q search with "artist title" for each candidate
+        for (cand in candidates) {
+            val query = "${cand.artist} ${cand.title}".trim()
+            if (query.isBlank()) continue
+            Log.d("LyricsFetcher", "trying LRCLIB q search: \"$query\"")
+            val results = tryQSearch(query)
+            if (results.isNotEmpty()) {
+                Log.d("LyricsFetcher", "LRCLIB q search returned ${results.size} results")
+                val best = pickBestResult(results, cleanedTitle, cleanedArtist, durationSec)
+                if (best != null) return@withContext best
+            }
         }
 
-        // title-only fallback - very strict
-        if (bestOverall != null) {
-            val tScore = titleMatchScore(title, bestOverall.first.trackName)
-            val bestNArtist = normalize(bestOverall.first.artistName)
-
-            Log.d("LyricsFetcher", "title-only fallback candidate: " +
-                    "\"${bestOverall.first.trackName}\" by \"${bestOverall.first.artistName}\" " +
-                    "tScore=${String.format("%.2f", tScore)} total=${bestOverall.second}")
-
-            if (tScore >= 0.95f && bestOverall.second >= 85) {
-                // check for competing results with different artists at similar scores
-                val competitors = uniqueResults.filter { r ->
-                    normalize(r.trackName) == normalize(bestOverall.first.trackName) &&
-                    normalize(r.artistName) != bestNArtist &&
-                    scoreResult(r, title, artist, durationSec) >= bestOverall.second - 10
-                }
-                if (competitors.isEmpty()) {
-                    Log.d("LyricsFetcher", "title-only search accepted: " +
-                            "\"${bestOverall.first.trackName}\" by \"${bestOverall.first.artistName}\"")
-                    return@withContext buildResult(bestOverall.first)
-                } else {
-                    Log.d("LyricsFetcher", "title-only search was too risky - multiple possible " +
-                            "artists (${competitors.size} competitors), no lyrics")
-                }
-            } else {
-                Log.d("LyricsFetcher", "title-only search was too risky - " +
-                        "weak title match or low total score, no lyrics")
+        // step 5: title-only search as absolute last resort
+        // title-only search is risky because everybody names songs the same thing
+        if (cleanedTitle.isNotBlank()) {
+            Log.d("LyricsFetcher", "trying title-only search: \"$cleanedTitle\"")
+            val results = tryQSearch(cleanedTitle)
+            if (results.isNotEmpty()) {
+                Log.d("LyricsFetcher", "title-only search returned ${results.size} results")
+                val best = pickTitleOnlyResult(results, cleanedTitle, cleanedArtist, durationSec)
+                if (best != null) return@withContext best
+                Log.d("LyricsFetcher", "title-only search was too risky, no lyrics")
             }
         }
 
@@ -183,29 +138,118 @@ class LyricsFetcher {
         null
     }
 
-    // generate multiple lookup candidates from messy titles
+    // pick the best result from a set, preferring ones with good artist match
+    private fun pickBestResult(
+        results: List<LyricsResponse>,
+        localTitle: String,
+        localArtist: String,
+        durationSec: Int?
+    ): LyricsResult? {
+        val scored = results.map { it to scoreResult(it, localTitle, localArtist, durationSec) }
+            .sortedByDescending { it.second }
+
+        var bestWithArtist: Pair<LyricsResponse, Int>? = null
+        var bestOverall: Pair<LyricsResponse, Int>? = null
+
+        for ((r, s) in scored) {
+            if (bestOverall == null || s > bestOverall.second) {
+                bestOverall = r to s
+            }
+            val aScore = artistMatchScore(localArtist, r.artistName)
+            if (aScore >= 0.5f && (bestWithArtist == null || s > bestWithArtist.second)) {
+                bestWithArtist = r to s
+            }
+        }
+
+        // dont grab random lyrics just because they showed up first
+        if (bestWithArtist != null && bestWithArtist.second >= 65) {
+            val r = bestWithArtist.first
+            val lyricType = if (r.syncedLyrics.isNotBlank()) "synced" else "plain"
+            Log.d("LyricsFetcher", "best match: \"${r.trackName}\" by \"${r.artistName}\" " +
+                    "score=${bestWithArtist.second} ($lyricType lyrics)")
+            return buildResult(r)
+        }
+
+        if (bestOverall != null && bestOverall.second >= 80) {
+            val r = bestOverall.first
+            val aScore = artistMatchScore(localArtist, r.artistName)
+            // title matched but artist looked wrong, skipping
+            Log.d("LyricsFetcher", "skipped sketchy match: \"${r.trackName}\" by \"${r.artistName}\" " +
+                    "score=${bestOverall.second} artistScore=${String.format("%.2f", aScore)}")
+        }
+
+        return null
+    }
+
+    // title-only: only accept if extremely confident
+    private fun pickTitleOnlyResult(
+        results: List<LyricsResponse>,
+        localTitle: String,
+        localArtist: String,
+        durationSec: Int?
+    ): LyricsResult? {
+        val nLocal = normalize(localTitle)
+
+        // filter to only exact or near-exact title matches
+        val exact = results.filter { normalize(it.trackName) == nLocal }
+
+        if (exact.isEmpty()) return null
+
+        val scored = exact.map { it to scoreResult(it, localTitle, localArtist, durationSec) }
+            .sortedByDescending { it.second }
+
+        val best = scored.first()
+        val nBestArtist = normalize(best.first.artistName)
+
+        // check for competing results with same title but different artist
+        val competitors = exact.filter {
+            normalize(it.artistName) != nBestArtist &&
+            scoreResult(it, localTitle, localArtist, durationSec) >= best.second - 15
+        }
+
+        if (competitors.isNotEmpty()) {
+            Log.d("LyricsFetcher", "title-only search too risky - ${competitors.size} " +
+                    "competing results with same title, different artists")
+            return null
+        }
+
+        // only accept if score is very high
+        if (best.second >= 85) {
+            val r = best.first
+            val lyricType = if (r.syncedLyrics.isNotBlank()) "synced" else "plain"
+            Log.d("LyricsFetcher", "title-only accepted: \"${r.trackName}\" by \"${r.artistName}\" " +
+                    "score=${best.second} ($lyricType lyrics)")
+            return buildResult(r)
+        }
+
+        return null
+    }
+
+    // generate lookup candidates from messy YouTube-style titles
+    // clean this only for lookup, not display
     private fun generateCandidates(title: String, artist: String): List<LookupCandidate> {
         val candidates = mutableListOf<LookupCandidate>()
         val rawTitle = title.trim()
         val rawArtist = artist.trim()
 
-        // candidate 1: raw title + raw artist
+        // candidate 1: raw title + raw artist (just in case)
         candidates.add(LookupCandidate(rawTitle, rawArtist))
 
-        // extract quoted content if present
+        // extract quoted text - this is likely the real song title
         val quoted = quotedRegex.find(rawTitle)
         val quotedText = quoted?.groupValues?.get(1)?.trim()
 
-        // check for pipe - usually means "title | artist [tag]"
+        // check for pipe - text before is description, text after is artist
         val pipeIndex = rawTitle.indexOf("|")
         val beforePipe = if (pipeIndex >= 0) rawTitle.substring(0, pipeIndex).trim() else null
         val afterPipe = if (pipeIndex >= 0) {
             rawTitle.substring(pipeIndex + 1).trim()
-                .replace(bracketParenRegex, "")
+                .replace(bracketParenOpenRegex, "")
+                .replace(parenContentOpenRegex, "")
                 .trim()
         } else null
 
-        // candidate 2: quoted title + pipe artist if available
+        // candidate 2: quoted title + pipe artist
         if (quotedText != null && afterPipe != null && afterPipe.isNotBlank()) {
             candidates.add(LookupCandidate(quotedText, afterPipe))
         }
@@ -220,43 +264,76 @@ class LyricsFetcher {
             candidates.add(LookupCandidate(beforePipe, afterPipe))
         }
 
-        // candidate 5: dash split - "Artist - Title" pattern
-        if (rawTitle.contains(" - ") && rawArtist.isNotBlank()) {
+        // candidate 5: before pipe + raw artist
+        if (beforePipe != null && rawArtist.isNotBlank()) {
+            candidates.add(LookupCandidate(beforePipe, rawArtist))
+        }
+
+        // candidate 6: strip brackets only, keep parens
+        val bracketStripped = rawTitle.replace(bracketParenOpenRegex, "").trim()
+        if (bracketStripped != rawTitle && bracketStripped.isNotBlank()) {
+            val pipeInStrip = bracketStripped.indexOf("|")
+            val stripBefore = if (pipeInStrip >= 0) bracketStripped.substring(0, pipeInStrip).trim() else bracketStripped
+            val stripAfter = if (pipeInStrip >= 0) {
+                bracketStripped.substring(pipeInStrip + 1).trim()
+                    .replace(bracketParenOpenRegex, "")
+                    .replace(parenContentOpenRegex, "")
+                    .trim()
+            } else null
+
+            if (quotedText != null) {
+                candidates.add(LookupCandidate(quotedText, if (stripAfter != null) stripAfter else rawArtist))
+            }
+            if (stripAfter != null && afterPipe == null) {
+                candidates.add(LookupCandidate(stripBefore, stripAfter))
+            }
+            candidates.add(LookupCandidate(stripBefore, rawArtist))
+        }
+
+        // candidate 7: strip brackets AND parens
+        val stripped = rawTitle
+            .replace(bracketParenOpenRegex, "")
+            .replace(parenContentOpenRegex, "")
+            .trim()
+        if (stripped != bracketStripped && stripped.isNotBlank()) {
+            val pipeInStrip = stripped.indexOf("|")
+            val stripBefore = if (pipeInStrip >= 0) stripped.substring(0, pipeInStrip).trim() else stripped
+            val stripAfter = if (pipeInStrip >= 0) stripped.substring(pipeInStrip + 1).trim() else null
+
+            if (quotedText != null && stripAfter != null) {
+                candidates.add(LookupCandidate(quotedText, stripAfter))
+            }
+            if (stripAfter != null) {
+                candidates.add(LookupCandidate(stripBefore, stripAfter))
+            }
+            candidates.add(LookupCandidate(stripBefore, rawArtist))
+        }
+
+        // candidate 8: clean junk from title
+        val cleanTitle = cleanJunk(rawTitle)
+        if (cleanTitle != rawTitle && cleanTitle.isNotBlank()) {
+            candidates.add(LookupCandidate(cleanTitle, rawArtist))
+        }
+
+        // candidate 9: dash split - "Artist - Title" pattern
+        // only use if we have no quoted or pipe info to avoid confusion
+        val hasQuoted = quotedText != null
+        val hasPipe = pipeIndex >= 0
+        if (!hasQuoted && !hasPipe && rawTitle.contains(" - ") && rawArtist.isNotBlank()) {
             val parts = rawTitle.split(" - ", limit = 2)
             if (parts.size == 2) {
                 candidates.add(LookupCandidate(parts[1].trim(), parts[0].trim()))
             }
         }
 
-        // candidate 6: before pipe + raw artist
-        if (beforePipe != null && rawArtist.isNotBlank()) {
-            candidates.add(LookupCandidate(beforePipe, rawArtist))
-        }
-
-        // candidate 7: raw title with brackets/parens stripped, plus raw artist
-        val strippedTitle = rawTitle.replace(bracketParenRegex, "").trim()
-        if (strippedTitle != rawTitle) {
-            candidates.add(LookupCandidate(strippedTitle, rawArtist))
-
-            // candidate 8: stripped title + pipe artist
-            if (afterPipe != null && afterPipe.isNotBlank()) {
-                candidates.add(LookupCandidate(strippedTitle, afterPipe))
-            }
-        }
-
-        // candidate 9: clean junk from title
-        val cleanTitle = cleanJunk(rawTitle)
-        if (cleanTitle != rawTitle && cleanTitle.isNotBlank()) {
-            candidates.add(LookupCandidate(cleanTitle, rawArtist))
-        }
-
-        // split artist on feat/ft/etc and generate more
+        // split artist on feat/ft/etc and generate more candidates
         val artistParts = splitArtists(rawArtist)
         if (artistParts.size > 1) {
             for (part in artistParts) {
-                if (part != rawArtist) {
+                if (part.lowercase() != rawArtist.lowercase()) {
                     if (quotedText != null) candidates.add(LookupCandidate(quotedText, part))
-                    candidates.add(LookupCandidate(strippedTitle, part))
+                    if (beforePipe != null) candidates.add(LookupCandidate(beforePipe, part))
+                    candidates.add(LookupCandidate(stripped, part))
                 }
             }
         }
@@ -265,51 +342,38 @@ class LyricsFetcher {
         return candidates.distinctBy { "${it.title.lowercase()}|${it.artist.lowercase()}" }
     }
 
-    // build search query strings from candidates
-    private fun buildSearchQueries(candidates: List<LookupCandidate>): List<String> {
-        val queries = mutableListOf<String>()
-        for (c in candidates) {
-            val q = "${c.title} ${c.artist}".trim()
-            if (q.isNotBlank()) queries.add(q)
-            val rev = "${c.artist} ${c.title}".trim()
-            if (rev.isNotBlank() && rev != q) queries.add(rev)
-        }
-        return queries.distinct()
-    }
-
-    private fun tryGetCached(
-        title: String, artist: String, album: String?, durationSec: Int?
-    ): LyricsResponse? {
+    // /api/search with track_name + artist_name params
+    private fun tryFieldSearch(trackName: String, artistName: String): List<LyricsResponse> {
         return try {
-            val url = buildGetUrl("https://lrclib.net/api/get-cached", title, artist, album, durationSec)
+            val params = mutableListOf(
+                "track_name=${URLEncoder.encode(trackName, "UTF-8")}",
+                "artist_name=${URLEncoder.encode(artistName, "UTF-8")}"
+            )
+            val url = "https://lrclib.net/api/search?${params.joinToString("&")}"
             val request = Request.Builder().url(url).header("User-Agent", USER_AGENT).build()
             val response = client.newCall(request).execute()
             if (response.isSuccessful) {
-                response.body?.string()?.let { parseLyricsResponse(it) }
-            } else null
+                val body = response.body?.string() ?: return emptyList()
+                if (body.trimStart().startsWith("[")) {
+                    val arr = JSONArray(body)
+                    (0 until arr.length()).mapNotNull { i ->
+                        parseLyricsResponse(arr.getJSONObject(i).toString())
+                    }
+                } else {
+                    // could be a single object response
+                    val obj = JSONObject(body)
+                    val parsed = parseLyricsResponse(obj.toString())
+                    if (parsed != null) listOf(parsed) else emptyList()
+                }
+            } else emptyList()
         } catch (e: Exception) {
-            Log.w("LyricsFetcher", "get-cached failed for \"$title\": ${e.message}")
-            null
+            Log.w("LyricsFetcher", "field search failed: ${e.message}")
+            emptyList()
         }
     }
 
-    private fun tryGet(
-        title: String, artist: String, album: String?, durationSec: Int?
-    ): LyricsResponse? {
-        return try {
-            val url = buildGetUrl("https://lrclib.net/api/get", title, artist, album, durationSec)
-            val request = Request.Builder().url(url).header("User-Agent", USER_AGENT).build()
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful) {
-                response.body?.string()?.let { parseLyricsResponse(it) }
-            } else null
-        } catch (e: Exception) {
-            Log.w("LyricsFetcher", "get failed for \"$title\": ${e.message}")
-            null
-        }
-    }
-
-    private fun trySearch(query: String): List<LyricsResponse> {
+    // /api/search with q= param
+    private fun tryQSearch(query: String): List<LyricsResponse> {
         return try {
             val encoded = URLEncoder.encode(query, "UTF-8")
             val url = "https://lrclib.net/api/search?q=$encoded"
@@ -323,25 +387,9 @@ class LyricsFetcher {
                 }
             } else emptyList()
         } catch (e: Exception) {
-            Log.w("LyricsFetcher", "search failed for \"$query\": ${e.message}")
+            Log.w("LyricsFetcher", "q search failed: ${e.message}")
             emptyList()
         }
-    }
-
-    private fun buildGetUrl(
-        base: String, title: String, artist: String, album: String?, durationSec: Int?
-    ): String {
-        val params = mutableListOf(
-            "track_name=${URLEncoder.encode(title, "UTF-8")}",
-            "artist_name=${URLEncoder.encode(artist, "UTF-8")}"
-        )
-        if (!album.isNullOrBlank()) {
-            params.add("album_name=${URLEncoder.encode(album, "UTF-8")}")
-        }
-        if (durationSec != null && durationSec > 0) {
-            params.add("duration=$durationSec")
-        }
-        return "$base?${params.joinToString("&")}"
     }
 
     private fun parseLyricsResponse(json: String): LyricsResponse? {
@@ -361,6 +409,44 @@ class LyricsFetcher {
             Log.w("LyricsFetcher", "failed to parse response: ${e.message}")
             null
         }
+    }
+
+    // score how well an lrclib result matches what we looked up
+    private fun scoreResult(
+        result: LyricsResponse,
+        localTitle: String,
+        localArtist: String,
+        durationSec: Int?
+    ): Int {
+        // instrumental = reject/no lyrics
+        if (result.instrumental) return -100
+
+        val tScore = titleMatchScore(localTitle, result.trackName)
+        val aScore = artistMatchScore(localArtist, result.artistName)
+
+        if (tScore <= 0f) return 0
+
+        var score = (tScore * 45 + aScore * 55).toInt()
+
+        // bonus when both match well
+        if (tScore >= 0.9f && aScore >= 0.7f) score += 25
+        if (tScore >= 0.95f && aScore >= 0.95f) score += 35
+
+        // duration bonus
+        if (durationSec != null && result.duration > 0) {
+            val diff = kotlin.math.abs(durationSec - result.duration)
+            when {
+                diff <= 1 -> score += 25
+                diff <= 3 -> score += 15
+                diff <= 6 -> score += 8
+                diff <= 10 -> score += 3
+            }
+        }
+
+        // synced lyrics bonus
+        if (result.syncedLyrics.isNotBlank()) score += 5
+
+        return score
     }
 
     // how well does the result title match what we looked up
@@ -393,14 +479,12 @@ class LyricsFetcher {
         val resultParts = splitArtists(nResult)
         if (localParts.isEmpty() || resultParts.isEmpty()) return 0f
 
-        // count how many local artists are represented in the result
         var localMatched = 0
         for (lp in localParts) {
             val best = resultParts.maxOfOrNull { rp -> singleArtistMatch(lp, rp) } ?: 0f
             if (best >= 0.6f) localMatched++
         }
 
-        // also check reverse (result artists represented in local)
         var resultMatched = 0
         for (rp in resultParts) {
             val best = localParts.maxOfOrNull { lp -> singleArtistMatch(lp, rp) } ?: 0f
@@ -410,7 +494,6 @@ class LyricsFetcher {
         val forwardRatio = localMatched.toFloat() / localParts.size
         val reverseRatio = resultMatched.toFloat() / resultParts.size
 
-        // weight forward more heavily (all our artists should be there)
         return forwardRatio * 0.7f + reverseRatio * 0.3f
     }
 
@@ -425,7 +508,6 @@ class LyricsFetcher {
         return 0f
     }
 
-    // split on feat/ft/& etc
     private fun splitArtists(artist: String): List<String> {
         return artist.split(artistSplitRegex)
             .map { it.trim() }
@@ -433,52 +515,24 @@ class LyricsFetcher {
             .map { it.replace(multiSpaceRegex, " ") }
     }
 
-    // score how well an lrclib result matches what we're looking for
-    private fun scoreResult(
-        result: LyricsResponse,
-        localTitle: String,
-        localArtist: String,
-        durationSec: Int?
-    ): Int {
-        if (result.instrumental) return -100
-
-        val tScore = titleMatchScore(localTitle, result.trackName)
-        val aScore = artistMatchScore(localArtist, result.artistName)
-
-        if (tScore <= 0f) return 0
-
-        var score = (tScore * 45 + aScore * 55).toInt()
-
-        // bonus when both match well
-        if (tScore >= 0.9f && aScore >= 0.7f) score += 25
-        if (tScore >= 0.95f && aScore >= 0.95f) score += 35
-
-        // duration bonus
-        if (durationSec != null && result.duration > 0) {
-            val diff = kotlin.math.abs(durationSec - result.duration)
-            when {
-                diff <= 1 -> score += 25
-                diff <= 3 -> score += 15
-                diff <= 6 -> score += 8
-                diff <= 10 -> score += 3
-            }
-        }
-
-        // synced lyrics bonus
-        if (result.syncedLyrics.isNotBlank()) score += 5
-
-        return score
-    }
-
     private fun buildResult(response: LyricsResponse): LyricsResult {
         val lyricsText = if (response.syncedLyrics.isNotBlank()) response.syncedLyrics
             else response.plainLyrics
+        val lyricType = if (response.syncedLyrics.isNotBlank()) "synced" else "plain"
+        Log.d("LyricsFetcher", "found $lyricType lyrics: \"${response.trackName}\" by \"${response.artistName}\"")
         return LyricsResult(
             lyrics = lyricsText,
             synced = response.syncedLyrics.isNotBlank(),
             matchedTrack = response.trackName,
             matchedArtist = response.artistName
         )
+    }
+
+    // clean for lookup only - strip junk terms
+    private fun cleanForLookup(input: String): String {
+        return input.replace(junkRegex, "")
+            .replace(multiSpaceRegex, " ")
+            .trim()
     }
 
     // lowercase, strip punctuation, collapse spaces
