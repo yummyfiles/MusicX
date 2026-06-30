@@ -288,7 +288,8 @@ fun MusicXApp(
                             is Destination.LibrarySettings -> NavEntry(destination) {
                                 LibrarySettingsScreen(
                                     viewModel = settingsViewModel,
-                                    onBack = { popBackStack() }
+                                    onBack = { popBackStack() },
+                                    onRescan = { songsViewModel.loadSongs(forceRefresh = true) }
                                 )
                             }
                             is Destination.LyricsSettings -> NavEntry(destination) {

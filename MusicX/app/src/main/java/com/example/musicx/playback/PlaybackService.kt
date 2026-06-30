@@ -1,6 +1,7 @@
 package com.example.musicx.playback
 
 import android.app.PendingIntent
+import android.content.SharedPreferences
 import android.media.audiofx.BassBoost
 import android.media.audiofx.Virtualizer
 import androidx.annotation.OptIn
@@ -21,8 +22,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-// this is the background service that keeps music playing even when app is closed
-// pretty cool right? took me forever to figure out tho ngl
 class PlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
@@ -30,17 +29,18 @@ class PlaybackService : MediaSessionService() {
     private var virtualizer: Virtualizer? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var prefs: SharedPreferences
+    private var currentSettings: GeneralSettings = GeneralSettings()
 
     @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         settingsRepository = SettingsRepository(applicationContext)
+        prefs = getSharedPreferences("playback_prefs", MODE_PRIVATE)
 
-        // set up our custom notification provider with theme colors
         val provider = MusicXNotificationProvider(applicationContext)
         setMediaNotificationProvider(provider)
 
-        // listen for theme changes and update notification colors
         serviceScope.launch(Dispatchers.Main) {
             settingsRepository.themeState
                 .flowOn(Dispatchers.IO)
@@ -49,38 +49,33 @@ class PlaybackService : MediaSessionService() {
                 }
         }
 
-        // build the player - this is the actual thing that plays music
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(AudioAttributes.DEFAULT, true)
-            .setHandleAudioBecomingNoisy(true) // pauses when headphones disconnect, pretty neat
+            .setHandleAudioBecomingNoisy(true)
             .build()
 
-        player.volume = 1.0f // max volume by default
+        player.volume = 1.0f
+        player.addListener(playerListener)
 
-        setupAudioEffects(player.audioSessionId) // bass boost go brrr
+        setupAudioEffects(player.audioSessionId)
 
-        // listen for settings changes and apply them
-        // had to put this on IO thread so it doesnt lag the whole app
         serviceScope.launch(Dispatchers.IO) {
             settingsRepository.generalSettings.collect { settings ->
+                currentSettings = settings
                 withContext(Dispatchers.Main) { applySettings(settings) }
             }
         }
 
-        // this whole pending intent thing is so tapping the notification opens the app
         val sessionActivityPendingIntent = packageManager
             ?.getLaunchIntentForPackage(packageName)
             ?.let { sessionIntent ->
                 PendingIntent.getActivity(
-                    this,
-                    0,
-                    sessionIntent,
-                    PendingIntent.FLAG_IMMUTABLE
+                    this, 0, sessionIntent, PendingIntent.FLAG_IMMUTABLE
                 )
             }
 
         val builder = MediaSession.Builder(this, player)
-            .setId("musicx") // gotta give it a name ig
+            .setId("musicx")
 
         if (sessionActivityPendingIntent != null) {
             builder.setSessionActivity(sessionActivityPendingIntent)
@@ -89,8 +84,65 @@ class PlaybackService : MediaSessionService() {
         mediaSession = builder.build()
     }
 
-    // sets up the bass boost and surround sound effects
-    // wrapped in try catch because some devices dont support it and it crashes
+    private val playerListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            if (playbackState == Player.STATE_ENDED) {
+                val player = mediaSession?.player ?: return
+                val settings = currentSettings
+
+                if (!settings.autoplayNext) {
+                    player.pause()
+                    player.seekTo(0)
+                } else if (!settings.loopVideos && player.repeatMode == Player.REPEAT_MODE_ALL) {
+                    player.repeatMode = Player.REPEAT_MODE_OFF
+                }
+            }
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            val player = mediaSession?.player ?: return
+            val settings = currentSettings
+
+            if (settings.rememberPosition && !isPlaying) {
+                val item = player.currentMediaItem ?: return
+                prefs.edit()
+                    .putLong("pos_${item.mediaId}", player.currentPosition)
+                    .apply()
+            }
+
+            if (settings.fadeOnPlayPause) {
+                if (isPlaying) {
+                    rampVolume(if (settings.normalizationEnabled) 0.85f else 1.0f, 150)
+                }
+            }
+        }
+
+        override fun onPositionDiscontinuity(
+            oldPosition: Player.PositionInfo,
+            newPosition: Player.PositionInfo,
+            reason: Int
+        ) {
+            if (reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION) {
+                val settings = currentSettings
+                if (settings.rememberPosition) {
+                    val savedPos = prefs.getLong("pos_${newPosition.mediaItem?.mediaId ?: ""}", 0L)
+                    if (savedPos > 0) {
+                        mediaSession?.player?.seekTo(savedPos)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onTaskRemoved(rootIntent: android.content.Intent?) {
+        val player = mediaSession?.player ?: return
+        if (!player.playWhenReady) {
+            player.pause()
+            stopSelf()
+        }
+        super.onTaskRemoved(rootIntent)
+    }
+
     private fun setupAudioEffects(sessionId: Int) {
         try {
             bassBoost = BassBoost(0, sessionId)
@@ -101,7 +153,6 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
-    // applies the equalizer settings from user preferences
     private fun applySettings(settings: GeneralSettings) {
         try {
             bassBoost?.let {
@@ -114,14 +165,34 @@ class PlaybackService : MediaSessionService() {
                 @Suppress("DEPRECATION")
                 it.setStrength(if (it.enabled) 1000.toShort() else 0.toShort())
             }
+
+            val player = mediaSession?.player ?: return
+
+            if (settings.autoplayNext) {
+                player.repeatMode = Player.REPEAT_MODE_ALL
+            }
+
+            player.volume = if (settings.normalizationEnabled) 0.85f else 1.0f
         } catch (e: Exception) {
-            android.util.Log.e("PlaybackService", "Error applying audio settings", e)
+            android.util.Log.e("PlaybackService", "Error applying settings", e)
+        }
+    }
+
+    private fun rampVolume(target: Float, durationMs: Long = 150) {
+        serviceScope.launch {
+            val player = mediaSession?.player ?: return@launch
+            val startVolume = player.volume
+            val steps = (durationMs / 20).toInt().coerceAtLeast(1)
+            for (i in 1..steps) {
+                player.volume = startVolume + (target - startVolume) * (i.toFloat() / steps)
+                kotlinx.coroutines.delay(20)
+            }
+            player.volume = target
         }
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
-    // cleanup when service is destroyed - gotta free up resources or memory leak bad
     override fun onDestroy() {
         mediaSession?.run {
             player.release()

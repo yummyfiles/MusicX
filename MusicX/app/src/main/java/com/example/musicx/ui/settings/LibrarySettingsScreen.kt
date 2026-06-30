@@ -15,7 +15,7 @@ import com.example.musicx.ui.theme.MusicXTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibrarySettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
+fun LibrarySettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit, onRescan: () -> Unit = {}) {
     val settings by viewModel.generalSettings.collectAsState()
 
     Scaffold(
@@ -43,7 +43,7 @@ fun LibrarySettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
             
             item {
                 Button(
-                    onClick = { },
+                    onClick = onRescan,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(100),
                     border = androidx.compose.foundation.BorderStroke(2.dp, MusicXTheme.colors.buttonOutline),

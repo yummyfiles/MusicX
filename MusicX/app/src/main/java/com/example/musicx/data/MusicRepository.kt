@@ -55,7 +55,7 @@ class MusicRepository(private val context: Context) {
 
     // loads all the songs from the library and mediastore
     // this was painful to write ngl, so many edge cases
-    suspend fun fetchLocalSongs(): List<Song> = withContext(Dispatchers.IO) {
+    suspend fun fetchLocalSongs(excludeSmallFiles: Boolean = true): List<Song> = withContext(Dispatchers.IO) {
         // parallelize Room DB queries for speed
         var overrides = emptyMap<String, MetadataOverride>()
         var ignoredUris = emptySet<String>()
@@ -133,7 +133,8 @@ class MusicRepository(private val context: Context) {
             librarySongDao.deleteSongsByUri(brokenUris)
         }
 
-        // 2. Fetch from MediaStore (skip tracks shorter than 5 seconds)
+        // 2. Fetch from MediaStore (skip tracks shorter than 5 or 30 seconds)
+        val minDurationMs = if (excludeSmallFiles) 30000 else 5000
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
@@ -145,7 +146,7 @@ class MusicRepository(private val context: Context) {
             "genre",
             MediaStore.Audio.Media.DISPLAY_NAME
         )
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.DURATION} > 5000"
+        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.DURATION} > $minDurationMs"
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
 
         try {
