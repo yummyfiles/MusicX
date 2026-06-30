@@ -50,24 +50,28 @@ class MusicRepository(private val context: Context) {
     private val metadataOverrideDao = db.metadataOverrideDao()
     private val librarySongDao = db.librarySongDao()
     private val ignoredSongDao = db.ignoredSongDao()
+    private val likedSongDao = db.likedSongDao()
     private val lyricsFetcher = LyricsFetcher() // this guy fetches lyrics from the internet
 
     // loads all the songs from the library and mediastore
     // this was painful to write ngl, so many edge cases
     suspend fun fetchLocalSongs(): List<Song> = withContext(Dispatchers.IO) {
         // parallelize Room DB queries for speed
-        val (overrides, ignoredUris, librarySongs) = try {
+        var overrides = emptyMap<String, MetadataOverride>()
+        var ignoredUris = emptySet<String>()
+        var librarySongs = emptyList<LibrarySong>()
+        var likedUris = emptySet<String>()
+        try {
             val overridesDef = async { metadataOverrideDao.getAllOverridesList() }
             val ignoredDef = async { ignoredSongDao.getAllIgnoredUrisList() }
             val libraryDef = async { librarySongDao.getAllSongsList() }
-            Triple(
-                overridesDef.await().associateBy { it.songUri },
-                ignoredDef.await().toSet(),
-                libraryDef.await()
-            )
+            val likedDef = async { likedSongDao.getAllLikedUris() }
+            overrides = overridesDef.await().associateBy { it.songUri }
+            ignoredUris = ignoredDef.await().toSet()
+            librarySongs = libraryDef.await()
+            likedUris = likedDef.await().toSet()
         } catch (e: Exception) {
             android.util.Log.e("MusicRepository", "Failed to fetch library data", e)
-            Triple(emptyMap(), emptySet(), emptyList())
         }
 
         val songs = ArrayList<Song>(librarySongs.size + 64)
@@ -91,6 +95,7 @@ class MusicRepository(private val context: Context) {
             }
 
             validLibraryUris.add(libSong.uri)
+            val isLiked = likedUris.contains(libSong.uri)
             val override = overrides[libSong.uri]
             if (override != null) {
                 songs.add(Song(
@@ -100,7 +105,8 @@ class MusicRepository(private val context: Context) {
                     duration = libSong.duration,
                     mediaUri = uri,
                     albumArtUri = libSong.albumArtUri?.toUri(),
-                    lyrics = override.customLyrics ?: libSong.lyrics
+                    lyrics = override.customLyrics ?: libSong.lyrics,
+                    isLiked = isLiked
                 ))
             } else {
                 // keep the raw title because youtube metadata is cursed
@@ -113,7 +119,8 @@ class MusicRepository(private val context: Context) {
                     duration = libSong.duration,
                     mediaUri = uri,
                     albumArtUri = libSong.albumArtUri?.toUri(),
-                    lyrics = libSong.lyrics
+                    lyrics = libSong.lyrics,
+                    isLiked = isLiked
                 ))
             }
         }
@@ -156,18 +163,19 @@ class MusicRepository(private val context: Context) {
                     val duration = cursor.getLong(durCol)
                     val albumId = cursor.getLong(albumCol)
 
+                    val isLiked = likedUris.contains(uriStr)
                     val override = overrides[uriStr]
                     if (override != null) {
                         songs.add(Song(id, override.customTitle ?: originalTitle, override.customArtist ?: originalArtist, duration,
                             ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id),
                             ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), albumId),
-                            override.customLyrics))
+                            override.customLyrics, isLiked))
                     } else {
                         // keep the raw title, no spacer crimes this time
                         songs.add(Song(id, originalTitle, originalArtist, duration,
                             ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id),
                             ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), albumId),
-                            null))
+                            null, isLiked))
                     }
                 }
             }
@@ -296,6 +304,69 @@ class MusicRepository(private val context: Context) {
         }
     }
 
+    suspend fun importDownloadedFile(filePath: String) = withContext(Dispatchers.IO) {
+        val file = File(filePath)
+        if (!file.exists() || file.length() == 0L) throw Exception("Downloaded file not found or empty")
+
+        val storageDir = File(context.filesDir, "music")
+        if (!storageDir.exists()) storageDir.mkdirs()
+        val artDir = File(context.filesDir, "art")
+        if (!artDir.exists()) artDir.mkdirs()
+
+        val existingUris = try {
+            librarySongDao.getAllUris().toSet()
+        } catch (e: Exception) {
+            emptySet()
+        }
+
+        val realName = file.name.substringBeforeLast(".")
+        val fileName = "music_${System.currentTimeMillis()}_${realName.replace(" ", "_")}.mp3"
+        val destFile = File(storageDir, fileName)
+        file.copyTo(destFile, overwrite = true)
+        file.delete()
+
+        if (!destFile.exists() || destFile.length() == 0L) throw Exception("Failed to copy downloaded file")
+
+        val internalUri = Uri.fromFile(destFile)
+        val uriStr = internalUri.toString()
+        if (existingUris.contains(uriStr)) throw Exception("Song already exists in library")
+
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, internalUri)
+
+            var title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+            var artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+                ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
+            val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
+
+            if (title?.contains("encoded=") == true || title?.contains("acc=") == true) title = null
+            if (title.isNullOrBlank()) title = realName
+            if (artist.isNullOrBlank()) artist = "Unknown Artist"
+
+            val artworkBytes = retriever.embeddedPicture
+            var internalArtUri: String? = null
+            if (artworkBytes != null) {
+                val artFile = File(artDir, "art_${destFile.nameWithoutExtension}.jpg")
+                FileOutputStream(artFile).use { it.write(artworkBytes) }
+                internalArtUri = Uri.fromFile(artFile).toString()
+            }
+
+            val libSong = LibrarySong(
+                uri = uriStr,
+                title = title!!,
+                artist = artist!!,
+                duration = duration,
+                albumArtUri = internalArtUri,
+                lyrics = null
+            )
+            librarySongDao.insertSongs(listOf(libSong))
+            ignoredSongDao.removeIgnoredSongs(listOf(uriStr))
+        } finally {
+            try { retriever.release() } catch (_: Exception) {}
+        }
+    }
+
     // restore old titles if the last build cooked them
     // internal files are named music_TIMESTAMP_original_name
     // we strip the prefix and recover the real display title
@@ -354,6 +425,14 @@ class MusicRepository(private val context: Context) {
     }
 
     // Metadata management
+    suspend fun likeSong(uri: String) = withContext(Dispatchers.IO) {
+        likedSongDao.insert(com.example.musicx.data.local.entity.LikedSong(uri))
+    }
+
+    suspend fun unlikeSong(uri: String) = withContext(Dispatchers.IO) {
+        likedSongDao.delete(uri)
+    }
+
     suspend fun updateMetadata(uri: String, title: String?, artist: String?, lyrics: String? = null) = withContext(Dispatchers.IO) {
         metadataOverrideDao.insertOverride(MetadataOverride(uri, title, artist, lyrics))
     }

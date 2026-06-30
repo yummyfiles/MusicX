@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
@@ -49,6 +51,8 @@ fun SongsScreen(
     val isSelectionMode by viewModel.isSelectionMode.collectAsState()
     val selectedUris by viewModel.selectedSongUris.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
+    val likedSongs = remember(songs) { songs.filter { it.isLiked } }
+    val unlikedSongs = remember(songs) { songs.filter { !it.isLiked } }
     
     // Track current playing song for UI feedback
     var currentMediaId by remember { mutableStateOf<String?>(null) }
@@ -156,42 +160,78 @@ fun SongsScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(
-                    items = songs,
-                    key = { it.mediaUri.toString() },
-                    contentType = { "song" }
-                ) { song ->
-                    val isSelected = selectedUris.contains(song.mediaUri.toString())
-                    val isCurrentlyPlaying = currentMediaId == song.id.toString()
-                    
-                    val onClick = remember(song.mediaUri, isSelectionMode, onSongClick) {
-                        {
-                            if (isSelectionMode) {
-                                viewModel.toggleSongSelection(song.mediaUri.toString())
-                            } else {
-                                onSongClick(song)
-                            }
-                        }
+                if (likedSongs.isNotEmpty()) {
+                    item(key = "liked_header", contentType = "header") {
+                        Text(
+                            "Liked Songs",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MusicXTheme.colors.primaryAccent,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
                     }
-                    val onLongClick = remember(song.mediaUri, isSelectionMode, onSongLongClick) {
-                        {
-                            if (!isSelectionMode) {
-                                viewModel.toggleSelectionMode()
-                                viewModel.toggleSongSelection(song.mediaUri.toString())
-                            } else {
-                                onSongLongClick(song)
-                            }
-                        }
+                    items(
+                        items = likedSongs,
+                        key = { it.mediaUri.toString() },
+                        contentType = { "liked_song" }
+                    ) { song ->
+                        SongItem(
+                            song = song,
+                            onLikeClick = { viewModel.toggleLike(song) },
+                            onClick = {
+                                if (isSelectionMode) viewModel.toggleSongSelection(song.mediaUri.toString())
+                                else onSongClick(song)
+                            },
+                            onLongClick = {
+                                if (!isSelectionMode) {
+                                    viewModel.toggleSelectionMode()
+                                    viewModel.toggleSongSelection(song.mediaUri.toString())
+                                } else {
+                                    onSongLongClick(song)
+                                }
+                            },
+                            isSelectionMode = isSelectionMode,
+                            isSelected = selectedUris.contains(song.mediaUri.toString()),
+                            isCurrentlyPlaying = currentMediaId == song.id.toString()
+                        )
                     }
-                    
-                    SongItem(
-                        song = song, 
-                        onClick = onClick,
-                        onLongClick = onLongClick,
-                        isSelectionMode = isSelectionMode,
-                        isSelected = isSelected,
-                        isCurrentlyPlaying = isCurrentlyPlaying
-                    )
+                }
+
+                if (unlikedSongs.isNotEmpty()) {
+                    item(key = "all_songs_header", contentType = "header") {
+                        Text(
+                            if (likedSongs.isNotEmpty()) "All Songs" else "Songs",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MusicXTheme.colors.primaryAccent,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    }
+                    items(
+                        items = unlikedSongs,
+                        key = { it.mediaUri.toString() },
+                        contentType = { "song" }
+                    ) { song ->
+                        SongItem(
+                            song = song,
+                            onLikeClick = { viewModel.toggleLike(song) },
+                            onClick = {
+                                if (isSelectionMode) viewModel.toggleSongSelection(song.mediaUri.toString())
+                                else onSongClick(song)
+                            },
+                            onLongClick = {
+                                if (!isSelectionMode) {
+                                    viewModel.toggleSelectionMode()
+                                    viewModel.toggleSongSelection(song.mediaUri.toString())
+                                } else {
+                                    onSongLongClick(song)
+                                }
+                            },
+                            isSelectionMode = isSelectionMode,
+                            isSelected = selectedUris.contains(song.mediaUri.toString()),
+                            isCurrentlyPlaying = currentMediaId == song.id.toString()
+                        )
+                    }
                 }
             }
         }
@@ -215,6 +255,7 @@ fun SongItem(
     song: Song, 
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
+    onLikeClick: (() -> Unit)? = null,
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
     isCurrentlyPlaying: Boolean = false
@@ -320,6 +361,20 @@ fun SongItem(
                     text = formatDuration(song.duration),
                     style = MaterialTheme.typography.bodySmall,
                     color = MusicXTheme.colors.secondaryText,
+                )
+            }
+        }
+
+        if (!isSelectionMode) {
+            IconButton(
+                onClick = { onLikeClick?.invoke() },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = if (song.isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (song.isLiked) "Unlike" else "Like",
+                    tint = if (song.isLiked) MusicXTheme.colors.primaryAccent else MusicXTheme.colors.iconSecondary,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }

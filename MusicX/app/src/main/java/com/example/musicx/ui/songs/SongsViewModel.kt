@@ -3,6 +3,7 @@ package com.example.musicx.ui.songs
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicx.data.MusicRepository
+import com.example.musicx.data.YtAudioFetcher
 import com.example.musicx.data.local.entity.Playlist
 import com.example.musicx.model.Song
 import android.util.Log
@@ -34,6 +35,20 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
 
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
+
+    sealed interface YtDownloadState {
+        data object Idle : YtDownloadState
+        data object RequestingToken : YtDownloadState
+        data object Downloading : YtDownloadState
+        data object Importing : YtDownloadState
+        data object Success : YtDownloadState
+        data class Error(val message: String) : YtDownloadState
+    }
+
+    private val _ytDownloadState = MutableStateFlow<YtDownloadState>(YtDownloadState.Idle)
+    val ytDownloadState: StateFlow<YtDownloadState> = _ytDownloadState.asStateFlow()
+
+    private val ytAudioFetcher = YtAudioFetcher()
 
     init {
         refreshPlaylists()
@@ -93,6 +108,20 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
         }
     }
 
+    fun toggleLike(song: Song) {
+        viewModelScope.launch {
+            val uri = song.mediaUri.toString()
+            if (song.isLiked) {
+                repository.unlikeSong(uri)
+            } else {
+                repository.likeSong(uri)
+            }
+            _songs.value = _songs.value.map {
+                if (it.mediaUri.toString() == uri) it.copy(isLiked = !it.isLiked) else it
+            }
+        }
+    }
+
     fun importSongs(uris: List<android.net.Uri>) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -108,6 +137,35 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
                 _isLoading.value = false
             }
         }
+    }
+
+    fun importFromYoutube(youtubeUrl: String, apiBaseUrl: String, cacheDir: java.io.File) {
+        viewModelScope.launch {
+            _ytDownloadState.value = YtDownloadState.RequestingToken
+            try {
+                val token = ytAudioFetcher.requestToken(apiBaseUrl, youtubeUrl)
+
+                _ytDownloadState.value = YtDownloadState.Downloading
+                val tempFile = java.io.File(cacheDir, "yt_download_${System.currentTimeMillis()}.mp3")
+                ytAudioFetcher.downloadAudio(apiBaseUrl, token, tempFile)
+
+                _ytDownloadState.value = YtDownloadState.Importing
+                repository.importDownloadedFile(tempFile.absolutePath)
+
+                _ytDownloadState.value = YtDownloadState.Success
+                _songs.value = repository.fetchLocalSongs()
+                hasLoadedSongs = true
+                lyricsSyncJob?.cancel()
+                lyricsSyncJob = launch { repository.syncAllLyrics() }
+            } catch (e: Exception) {
+                Log.e("SongsViewModel", "YouTube download failed", e)
+                _ytDownloadState.value = YtDownloadState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun resetYtDownloadState() {
+        _ytDownloadState.value = YtDownloadState.Idle
     }
 
     fun updateMetadata(uri: String, title: String?, artist: String?, lyrics: String? = null) {

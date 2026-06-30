@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -40,10 +41,12 @@ class PlaybackService : MediaSessionService() {
         setMediaNotificationProvider(provider)
 
         // listen for theme changes and update notification colors
-        serviceScope.launch(Dispatchers.IO) {
-            settingsRepository.themeState.collect { theme ->
-                provider.updateColors(theme.notificationBackground, theme.notificationText)
-            }
+        serviceScope.launch(Dispatchers.Main) {
+            settingsRepository.themeState
+                .flowOn(Dispatchers.IO)
+                .collect { theme ->
+                    provider.updateColors(theme.notificationBackground, theme.notificationText)
+                }
         }
 
         // build the player - this is the actual thing that plays music

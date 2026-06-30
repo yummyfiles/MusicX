@@ -11,5 +11,6 @@ data class Song(
     val duration: Long,
     val mediaUri: Uri,
     val albumArtUri: Uri? = null,
-    val lyrics: String? = null
+    val lyrics: String? = null,
+    val isLiked: Boolean = false
 )
