@@ -277,7 +277,7 @@ fun YtDownloadCard(
                 value = apiUrl,
                 onValueChange = onApiUrlChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("API Server URL", color = MusicXTheme.colors.inputHint) },
+                placeholder = { Text("e.g. http://192.168.1.100:5000", color = MusicXTheme.colors.inputHint) },
                 singleLine = true,
                 enabled = !isDownloading,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -289,6 +289,13 @@ fun YtDownloadCard(
                     unfocusedContainerColor = MusicXTheme.colors.inputBackground
                 ),
                 shape = RoundedCornerShape(12.dp)
+            )
+
+            Text(
+                "Run the API server on your computer and enter its local IP here (not localhost — localhost on your phone is the phone itself).",
+                style = MaterialTheme.typography.bodySmall,
+                color = MusicXTheme.colors.secondaryText,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(12.dp))
