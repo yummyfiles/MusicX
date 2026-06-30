@@ -40,5 +40,11 @@ data class GeneralSettings(
     val autoplayVideos: Boolean = false,
     val loopVideos: Boolean = true,
     val highQualityOnly: Boolean = false,
-    val showSubtitles: Boolean = true
+    val showSubtitles: Boolean = true,
+
+    // Splash
+    val showSplash: Boolean = true,
+
+    // Tabs
+    val visibleTabs: List<String> = listOf("Songs", "Artists", "Albums", "Genres", "Playlists", "Import", "Search", "Settings")
 )

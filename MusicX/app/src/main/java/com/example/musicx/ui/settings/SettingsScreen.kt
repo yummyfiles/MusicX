@@ -20,12 +20,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.musicx.data.GeneralSettings
 import com.example.musicx.ui.navigation.Destination
 import com.example.musicx.ui.theme.MusicXTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onNavigate: (Destination) -> Unit) {
+fun SettingsScreen(
+    onNavigate: (Destination) -> Unit,
+    generalSettings: GeneralSettings = GeneralSettings(),
+    onUpdateGeneralSettings: ((GeneralSettings) -> GeneralSettings) -> Unit = {}
+) {
     val context = LocalContext.current
 
     Scaffold(
@@ -60,6 +65,34 @@ fun SettingsScreen(onNavigate: (Destination) -> Unit) {
             item { SettingItem("Playback", "Queue behavior and controls", onClick = { onNavigate(Destination.PlaybackSettings) }) }
             item { SettingItem("Library", "Scan folders and manage metadata", onClick = { onNavigate(Destination.LibrarySettings) }) }
             item { SettingItem("Video", "Playback and background settings", onClick = { onNavigate(Destination.VideoSettings) }) }
+            item { SettingItem("Customize Tabs", "Show/hide bottom navigation tabs", onClick = { onNavigate(Destination.CustomizeTabs) }) }
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MusicXTheme.colors.cardBackground),
+                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MusicXTheme.colors.outline.copy(alpha = 0.2f)))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Show Logo Animation", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MusicXTheme.colors.primaryText)
+                            Text("Disable the splash logo on app start", style = MaterialTheme.typography.bodyMedium, color = MusicXTheme.colors.secondaryText)
+                        }
+                        Switch(
+                            checked = generalSettings.showSplash,
+                            onCheckedChange = { checked ->
+                                onUpdateGeneralSettings { it.copy(showSplash = checked) }
+                            },
+                            colors = SwitchDefaults.colors(checkedTrackColor = MusicXTheme.colors.primaryAccent)
+                        )
+                    }
+                }
+            }
             item {
                 SponsorButton(
                     onClick = {

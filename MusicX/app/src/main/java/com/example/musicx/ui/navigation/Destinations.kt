@@ -7,6 +7,12 @@ sealed interface Destination : NavKey {
     @Serializable
     data object Songs : Destination
     @Serializable
+    data object Artists : Destination
+    @Serializable
+    data object Albums : Destination
+    @Serializable
+    data object Genres : Destination
+    @Serializable
     data object Playlists : Destination
     @Serializable
     data object Import : Destination
@@ -20,6 +26,12 @@ sealed interface Destination : NavKey {
     data class EditMetadata(val songId: Long) : Destination
     @Serializable
     data class PlaylistDetail(val playlistId: Long) : Destination
+    @Serializable
+    data class ArtistSongs(val artist: String) : Destination
+    @Serializable
+    data class AlbumSongs(val album: String) : Destination
+    @Serializable
+    data class GenreSongs(val genre: String) : Destination
     
     @Serializable
     data object AppearanceSettings : Destination
@@ -33,4 +45,6 @@ sealed interface Destination : NavKey {
     data object LyricsSettings : Destination
     @Serializable
     data object VideoSettings : Destination
+    @Serializable
+    data object CustomizeTabs : Destination
 }

@@ -106,7 +106,9 @@ class MusicRepository(private val context: Context) {
                     mediaUri = uri,
                     albumArtUri = libSong.albumArtUri?.toUri(),
                     lyrics = override.customLyrics ?: libSong.lyrics,
-                    isLiked = isLiked
+                    isLiked = isLiked,
+                    album = libSong.album,
+                    genre = libSong.genre
                 ))
             } else {
                 // keep the raw title because youtube metadata is cursed
@@ -120,7 +122,9 @@ class MusicRepository(private val context: Context) {
                     mediaUri = uri,
                     albumArtUri = libSong.albumArtUri?.toUri(),
                     lyrics = libSong.lyrics,
-                    isLiked = isLiked
+                    isLiked = isLiked,
+                    album = libSong.album,
+                    genre = libSong.genre
                 ))
             }
         }
@@ -137,6 +141,8 @@ class MusicRepository(private val context: Context) {
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.ALBUM_ID,
+            MediaStore.Audio.Media.ALBUM,
+            "genre",
             MediaStore.Audio.Media.DISPLAY_NAME
         )
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.DURATION} > 5000"
@@ -150,7 +156,9 @@ class MusicRepository(private val context: Context) {
                 val titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
                 val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                 val durCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-                val albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+                val albumIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+                val albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+                val genreIdx = cursor.getColumnIndex("genre")
                 val dispCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
 
                 while (cursor.moveToNext()) {
@@ -161,7 +169,9 @@ class MusicRepository(private val context: Context) {
                     val originalTitle = cursor.getString(titleCol) ?: "Unknown"
                     val originalArtist = cursor.getString(artistCol) ?: "Unknown"
                     val duration = cursor.getLong(durCol)
-                    val albumId = cursor.getLong(albumCol)
+                    val albumId = cursor.getLong(albumIdCol)
+                    val albumName = cursor.getString(albumCol) ?: ""
+                    val genreName = if (genreIdx != -1) cursor.getString(genreIdx) ?: "" else ""
 
                     val isLiked = likedUris.contains(uriStr)
                     val override = overrides[uriStr]
@@ -169,13 +179,12 @@ class MusicRepository(private val context: Context) {
                         songs.add(Song(id, override.customTitle ?: originalTitle, override.customArtist ?: originalArtist, duration,
                             ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id),
                             ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), albumId),
-                            override.customLyrics, isLiked))
+                            override.customLyrics, isLiked, albumName, genreName))
                     } else {
-                        // keep the raw title, no spacer crimes this time
                         songs.add(Song(id, originalTitle, originalArtist, duration,
                             ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id),
                             ContentUris.withAppendedId("content://media/external/audio/albumart".toUri(), albumId),
-                            null, isLiked))
+                            null, isLiked, albumName, genreName))
                     }
                 }
             }
@@ -264,6 +273,8 @@ class MusicRepository(private val context: Context) {
                     var artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
                         ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
                     val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
+                    val album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM) ?: ""
+                    val genre = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE) ?: ""
                 
                     // keep the raw title, dont clean it for display
                     // only fall back to filename if metadata is completely empty
@@ -287,7 +298,9 @@ class MusicRepository(private val context: Context) {
                         artist = artist!!,
                         duration = duration,
                         albumArtUri = internalArtUri,
-                        lyrics = null
+                        lyrics = null,
+                        album = album,
+                        genre = genre
                     )
                 } finally {
                     try { retriever.release() } catch (_: Exception) {}
@@ -339,6 +352,8 @@ class MusicRepository(private val context: Context) {
             var artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
                 ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
             val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
+            val album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM) ?: ""
+            val genre = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE) ?: ""
 
             if (title?.contains("encoded=") == true || title?.contains("acc=") == true) title = null
             if (title.isNullOrBlank()) title = realName
@@ -358,7 +373,9 @@ class MusicRepository(private val context: Context) {
                 artist = artist!!,
                 duration = duration,
                 albumArtUri = internalArtUri,
-                lyrics = null
+                lyrics = null,
+                album = album,
+                genre = genre
             )
             librarySongDao.insertSongs(listOf(libSong))
             ignoredSongDao.removeIgnoredSongs(listOf(uriStr))

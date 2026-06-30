@@ -7,6 +7,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.navigation3.ui.NavDisplay
 import androidx.compose.runtime.*
@@ -21,7 +22,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Album
+import androidx.compose.material.icons.rounded.MusicNote
 import com.example.musicx.playback.MusicController
+import com.example.musicx.ui.browse.AlbumsScreen
+import com.example.musicx.ui.browse.ArtistsScreen
+import com.example.musicx.ui.browse.FilteredSongsList
+import com.example.musicx.ui.browse.GenresScreen
 import com.example.musicx.ui.components.MiniPlayer
 import com.example.musicx.ui.components.MusicXIcons
 import com.example.musicx.ui.songs.SongsScreen
@@ -38,14 +46,31 @@ import com.example.musicx.ui.settings.PlaybackSettingsScreen
 import com.example.musicx.ui.settings.LibrarySettingsScreen
 import com.example.musicx.ui.settings.LyricsSettingsScreen
 import com.example.musicx.ui.settings.VideoSettingsScreen
+import com.example.musicx.ui.settings.CustomizeTabsScreen
 import com.example.musicx.ui.nowplaying.NowPlayingScreen
 import androidx.media3.common.MediaItem
 import com.example.musicx.ui.theme.MusicXTheme
-
 import com.example.musicx.ui.metadata.MetadataEditor
 
-// main app composable - handles all the navigation and screen switching
-// this is the root of the whole UI basically
+data class TabDef(
+    val id: String,
+    val label: String,
+    val icon: ImageVector,
+    val destination: Destination,
+    val isActive: (NavKey) -> Boolean
+)
+
+private val ALL_TABS = listOf(
+    TabDef("Songs", "Songs", MusicXIcons.Songs, Destination.Songs, { it is Destination.Songs }),
+    TabDef("Artists", "Artists", Icons.Rounded.Person, Destination.Artists, { it is Destination.Artists }),
+    TabDef("Albums", "Albums", Icons.Rounded.Album, Destination.Albums, { it is Destination.Albums }),
+    TabDef("Genres", "Genres", Icons.Rounded.MusicNote, Destination.Genres, { it is Destination.Genres }),
+    TabDef("Playlists", "Playlists", MusicXIcons.Playlists, Destination.Playlists, { it is Destination.Playlists || it is Destination.PlaylistDetail }),
+    TabDef("Import", "Import", MusicXIcons.Import, Destination.Import, { it is Destination.Import }),
+    TabDef("Search", "Search", MusicXIcons.Search, Destination.Search, { it is Destination.Search }),
+    TabDef("Settings", "Settings", MusicXIcons.Settings, Destination.Settings, { it is Destination.Settings })
+)
+
 @Composable
 fun MusicXApp(
     songsViewModel: SongsViewModel,
@@ -57,23 +82,23 @@ fun MusicXApp(
     
     val mediaController by musicController.mediaController
     
-    val isMobile = true // todo: detect this properly someday
+    val generalSettings by settingsViewModel.generalSettings.collectAsState()
+    val songs by songsViewModel.songs.collectAsState()
+    
+    val isMobile = true
 
-    // go back one screen
     fun popBackStack() {
         if (backStack.size > 1) {
             backStack.removeAt(backStack.size - 1)
         }
     }
 
-    // navigate to a top level tab - clears the backstack
     fun navigateTopLevel(destination: Destination) {
-        if (currentDestination == destination) return // already here, dont do anything
+        if (currentDestination == destination) return
         backStack.clear()
         backStack.add(destination)
     }
 
-    // play a song - builds the media item and tells the player to go
     val playSong = remember(mediaController) {
         { song: com.example.musicx.model.Song ->
             val mediaItem = MediaItem.Builder()
@@ -94,15 +119,18 @@ fun MusicXApp(
         }
     }
 
+    val visibleTabs = remember(generalSettings.visibleTabs) {
+        ALL_TABS.filter { it.id in generalSettings.visibleTabs }
+    }
+
     Scaffold(
         bottomBar = {
             AnimatedVisibility(
-                visible = isMobile && currentDestination !is Destination.NowPlaying,
+                visible = isMobile && currentDestination !is Destination.NowPlaying && currentDestination !is Destination.ArtistSongs && currentDestination !is Destination.AlbumSongs && currentDestination !is Destination.GenreSongs,
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
                 Column {
-                    // black bg only lives behind the miniplayer
                     Box(modifier = Modifier.background(MusicXTheme.colors.bottomBar)) {
                         MiniPlayer(
                             mediaController = mediaController,
@@ -112,54 +140,22 @@ fun MusicXApp(
                     NavigationBar(
                         containerColor = MusicXTheme.colors.bottomBar,
                         tonalElevation = 0.dp,
-                        windowInsets = WindowInsets.navigationBars // Fixed: Respect system nav bar
+                        windowInsets = WindowInsets.navigationBars
                     ) {
+                        visibleTabs.forEach { tab ->
                             NavigationItem(
-                                selected = currentDestination is Destination.Songs,
-                                onClick = { 
-                                    navigateTopLevel(Destination.Songs)
-                                },
-                                icon = MusicXIcons.Songs,
-                                label = "Songs"
-                            )
-                            NavigationItem(
-                                selected = currentDestination is Destination.Playlists || currentDestination is Destination.PlaylistDetail,
-                                onClick = { 
-                                    navigateTopLevel(Destination.Playlists)
-                                },
-                                icon = MusicXIcons.Playlists,
-                                label = "Playlists"
-                            )
-                            NavigationItem(
-                                selected = currentDestination is Destination.Import,
-                                onClick = { 
-                                    navigateTopLevel(Destination.Import)
-                                },
-                                icon = MusicXIcons.Import,
-                                label = "Import"
-                            )
-                            NavigationItem(
-                                selected = currentDestination is Destination.Search,
-                                onClick = { 
-                                    navigateTopLevel(Destination.Search)
-                                },
-                                icon = MusicXIcons.Search,
-                                label = "Search"
-                            )
-                            NavigationItem(
-                                selected = currentDestination is Destination.Settings,
-                                onClick = { 
-                                    navigateTopLevel(Destination.Settings)
-                                },
-                                icon = MusicXIcons.Settings,
-                                label = "Settings"
+                                selected = tab.isActive(currentDestination),
+                                onClick = { navigateTopLevel(tab.destination) },
+                                icon = tab.icon,
+                                label = tab.label
                             )
                         }
+                    }
                 }
             }
         },
         containerColor = MusicXTheme.colors.primaryBackground,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0) // Fixed: Remove extra Scaffold insets
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -187,6 +183,60 @@ fun MusicXApp(
                                     }
                                 )
                             }
+                            is Destination.Artists -> NavEntry(destination) {
+                                ArtistsScreen(
+                                    songs = songs,
+                                    onArtistClick = { artist ->
+                                        backStack.add(Destination.ArtistSongs(artist))
+                                    }
+                                )
+                            }
+                            is Destination.Albums -> NavEntry(destination) {
+                                AlbumsScreen(
+                                    songs = songs,
+                                    onAlbumClick = { album ->
+                                        backStack.add(Destination.AlbumSongs(album))
+                                    }
+                                )
+                            }
+                            is Destination.Genres -> NavEntry(destination) {
+                                GenresScreen(
+                                    songs = songs,
+                                    onGenreClick = { genre ->
+                                        backStack.add(Destination.GenreSongs(genre))
+                                    }
+                                )
+                            }
+                            is Destination.ArtistSongs -> NavEntry(destination) {
+                                FilteredSongsList(
+                                    songs = songs,
+                                    title = destination.artist,
+                                    filterKey = { it.artist },
+                                    filterValue = destination.artist,
+                                    onBack = { popBackStack() },
+                                    onSongClick = playSong
+                                )
+                            }
+                            is Destination.AlbumSongs -> NavEntry(destination) {
+                                FilteredSongsList(
+                                    songs = songs,
+                                    title = destination.album,
+                                    filterKey = { it.album },
+                                    filterValue = destination.album,
+                                    onBack = { popBackStack() },
+                                    onSongClick = playSong
+                                )
+                            }
+                            is Destination.GenreSongs -> NavEntry(destination) {
+                                FilteredSongsList(
+                                    songs = songs,
+                                    title = destination.genre,
+                                    filterKey = { it.genre },
+                                    filterValue = destination.genre,
+                                    onBack = { popBackStack() },
+                                    onSongClick = playSong
+                                )
+                            }
                             is Destination.Playlists -> NavEntry(destination) { 
                                 PlaylistsScreen(
                                     viewModel = songsViewModel,
@@ -211,7 +261,11 @@ fun MusicXApp(
                                 )
                             }
                             is Destination.Settings -> NavEntry(destination) { 
-                                SettingsScreen(onNavigate = { backStack.add(it) }) 
+                                SettingsScreen(
+                                    onNavigate = { backStack.add(it) },
+                                    generalSettings = generalSettings,
+                                    onUpdateGeneralSettings = { update -> settingsViewModel.updateGeneralSettings(update) }
+                                ) 
                             }
                             is Destination.AppearanceSettings -> NavEntry(destination) {
                                 AppearanceSettingsScreen(
@@ -249,9 +303,16 @@ fun MusicXApp(
                                     onBack = { popBackStack() }
                                 )
                             }
+                            is Destination.CustomizeTabs -> NavEntry(destination) {
+                                CustomizeTabsScreen(
+                                    generalSettings = generalSettings,
+                                    onSave = { visibleTabs ->
+                                        settingsViewModel.updateGeneralSettings { it.copy(visibleTabs = visibleTabs) }
+                                    },
+                                    onBack = { popBackStack() }
+                                )
+                            }
                             is Destination.NowPlaying -> NavEntry(destination) {
-                                val songs by songsViewModel.songs.collectAsState()
-                                val generalSettings by settingsViewModel.generalSettings.collectAsState()
                                 val currentMediaId = mediaController?.currentMediaItem?.mediaId
                                 val currentSong = remember(songs, currentMediaId) {
                                     currentMediaId?.let { id -> songs.find { it.id.toString() == id } }
@@ -265,7 +326,6 @@ fun MusicXApp(
                                 )
                             }
                             is Destination.EditMetadata -> NavEntry(destination) {
-                                val songs by songsViewModel.songs.collectAsState()
                                 val song = remember(songs, destination.songId) {
                                     songs.find { it.id == destination.songId }
                                 }
@@ -285,8 +345,6 @@ fun MusicXApp(
                 )
             }
 
-            // fade the songs out before the miniplayer eats them
-            // visual overlay only, not layout
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -319,7 +377,7 @@ fun RowScope.NavigationItem(
                 maxLines = 1,
                 overflow = TextOverflow.Visible,
                 softWrap = false,
-                fontSize = 11.sp, // Slightly smaller to prevent wrapping
+                fontSize = 11.sp,
                 color = if (selected) MusicXTheme.colors.navActive else MusicXTheme.colors.navInactive
             ) 
         },

@@ -83,10 +83,11 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             val themeState by settingsViewModel.themeState.collectAsState()
-            var showSplash by rememberSaveable { mutableStateOf(true) }
+            val generalSettings by settingsViewModel.generalSettings.collectAsState()
+            var showSplash by rememberSaveable { mutableStateOf(generalSettings.showSplash) }
 
             MusicXTheme(themeState = themeState) {
-                if (showSplash) {
+                if (showSplash && generalSettings.showSplash) {
                     SplashScreen(onSplashFinished = { showSplash = false })
                 } else {
                     val audioPermissions = remember {

@@ -14,7 +14,7 @@ import com.example.musicx.data.local.entity.LikedSong
 import com.example.musicx.data.local.entity.MetadataOverride
 import com.example.musicx.data.local.entity.Playlist
 
-@Database(entities = [Playlist::class, MetadataOverride::class, LibrarySong::class, IgnoredSong::class, LikedSong::class], version = 6, exportSchema = false)
+@Database(entities = [Playlist::class, MetadataOverride::class, LibrarySong::class, IgnoredSong::class, LikedSong::class], version = 7, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class MusicDatabase : RoomDatabase() {
     abstract fun playlistDao(): PlaylistDao

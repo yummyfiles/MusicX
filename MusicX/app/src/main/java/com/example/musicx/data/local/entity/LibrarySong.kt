@@ -14,5 +14,7 @@ data class LibrarySong(
     val artist: String,
     val duration: Long,
     val albumArtUri: String? = null,
-    val lyrics: String? = null
+    val lyrics: String? = null,
+    val album: String = "",
+    val genre: String = ""
 )

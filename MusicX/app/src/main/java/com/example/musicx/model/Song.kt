@@ -12,5 +12,7 @@ data class Song(
     val mediaUri: Uri,
     val albumArtUri: Uri? = null,
     val lyrics: String? = null,
-    val isLiked: Boolean = false
+    val isLiked: Boolean = false,
+    val album: String = "",
+    val genre: String = ""
 )
