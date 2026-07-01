@@ -51,16 +51,8 @@
         </provider>
 
         <receiver
-            android:name=".widget.WidgetUpdateReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.example.musicx.UPDATE_WIDGETS" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
             android:name=".widget.MiniPlayerWidgetReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -71,7 +63,7 @@
 
         <receiver
             android:name=".widget.MediumPlayerWidgetReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -82,7 +74,7 @@
 
         <receiver
             android:name=".widget.LargeAlbumWidgetReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -92,19 +84,8 @@
         </receiver>
 
         <receiver
-            android:name=".widget.PlaylistLauncherWidgetReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/playlist_launcher_widget" />
-        </receiver>
-
-        <receiver
             android:name=".widget.FavoritesWidgetReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -114,8 +95,30 @@
         </receiver>
 
         <receiver
+            android:name=".widget.PlaylistLauncherWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/playlist_launcher_widget" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.QuickActionsWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/quick_actions_widget" />
+        </receiver>
+
+        <receiver
             android:name=".widget.ShuffleWidgetReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -124,16 +127,6 @@
                 android:resource="@xml/shuffle_widget" />
         </receiver>
 
-        <receiver
-            android:name=".widget.QuickActionsWidgetReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/quick_actions_widget" />
-        </receiver>
     </application>
 
 </manifest>

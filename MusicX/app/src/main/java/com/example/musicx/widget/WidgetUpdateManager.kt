@@ -6,11 +6,12 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.datastore.preferences.core.preferencesOf
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.glance.appwidget.update
+import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.musicx.data.MusicRepository
 import com.example.musicx.data.local.entity.Playlist
+import com.example.musicx.playback.PlaybackService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
@@ -44,7 +45,7 @@ object WidgetUpdateManager {
                 try {
                     val token = SessionToken(
                         context,
-                        ComponentName(context, "com.example.musicx", ".playback.PlaybackService")
+                        ComponentName(context, PlaybackService::class.java)
                     )
                     val controllerFuture = MediaController.Builder(context, token).buildAsync()
                     val controller = controllerFuture.get()
@@ -53,7 +54,7 @@ object WidgetUpdateManager {
                         val meta = item?.mediaMetadata
                         currentTitle = meta?.title?.toString() ?: ""
                         currentArtist = meta?.artist?.toString() ?: ""
-                        currentArtUri = item?.localConfiguration?.artworkUri?.toString() ?: ""
+                        currentArtUri = item?.mediaMetadata?.artworkUri?.toString() ?: ""
                         isPlaying = controller.isPlaying
                         shuffleMode = controller.shuffleModeEnabled
                         repeatMode = controller.repeatMode
@@ -84,7 +85,13 @@ object WidgetUpdateManager {
                     MiniPlayerWidget.HAS_SONGS to hasSongs
                 )
                 manager.getGlanceIds(MiniPlayerWidget::class.java).forEach { id ->
-                    MiniPlayerWidget().update(context, id, miniPrefs)
+                    updateAppWidgetState(context, id) { prefs ->
+                        prefs[MiniPlayerWidget.SONG_TITLE] = currentTitle
+                        prefs[MiniPlayerWidget.SONG_ARTIST] = currentArtist
+                        prefs[MiniPlayerWidget.ALBUM_ART_PATH] = artContentUri
+                        prefs[MiniPlayerWidget.IS_PLAYING] = isPlaying
+                        prefs[MiniPlayerWidget.HAS_SONGS] = hasSongs
+                    }
                 }
 
                 val medPrefs = preferencesOf(
@@ -97,7 +104,15 @@ object WidgetUpdateManager {
                     MediumPlayerWidget.REPEAT_MODE to repeatMode.toLong()
                 )
                 manager.getGlanceIds(MediumPlayerWidget::class.java).forEach { id ->
-                    MediumPlayerWidget().update(context, id, medPrefs)
+                    updateAppWidgetState(context, id) { prefs ->
+                        prefs[MediumPlayerWidget.SONG_TITLE] = currentTitle
+                        prefs[MediumPlayerWidget.SONG_ARTIST] = currentArtist
+                        prefs[MediumPlayerWidget.ALBUM_ART_PATH] = artContentUri
+                        prefs[MediumPlayerWidget.IS_PLAYING] = isPlaying
+                        prefs[MediumPlayerWidget.HAS_SONGS] = hasSongs
+                        prefs[MediumPlayerWidget.SHUFFLE_MODE] = shuffleMode
+                        prefs[MediumPlayerWidget.REPEAT_MODE] = repeatMode.toLong()
+                    }
                 }
 
                 val largePrefs = preferencesOf(
@@ -108,35 +123,49 @@ object WidgetUpdateManager {
                     LargeAlbumWidget.HAS_SONGS to hasSongs
                 )
                 manager.getGlanceIds(LargeAlbumWidget::class.java).forEach { id ->
-                    LargeAlbumWidget().update(context, id, largePrefs)
+                    updateAppWidgetState(context, id) { prefs ->
+                        prefs[LargeAlbumWidget.SONG_TITLE] = currentTitle
+                        prefs[LargeAlbumWidget.SONG_ARTIST] = currentArtist
+                        prefs[LargeAlbumWidget.ALBUM_ART_PATH] = artContentUri
+                        prefs[LargeAlbumWidget.IS_PLAYING] = isPlaying
+                        prefs[LargeAlbumWidget.HAS_SONGS] = hasSongs
+                    }
                 }
 
                 val plPrefs = preferencesOf(
                     PlaylistLauncherWidget.PLAYLISTS_JSON to playlistsJson
                 )
                 manager.getGlanceIds(PlaylistLauncherWidget::class.java).forEach { id ->
-                    PlaylistLauncherWidget().update(context, id, plPrefs)
+                    updateAppWidgetState(context, id) { prefs ->
+                        prefs[PlaylistLauncherWidget.PLAYLISTS_JSON] = playlistsJson
+                    }
                 }
 
                 val favPrefs = preferencesOf(
                     FavoritesWidget.FAVORITES_JSON to favoritesJson
                 )
                 manager.getGlanceIds(FavoritesWidget::class.java).forEach { id ->
-                    FavoritesWidget().update(context, id, favPrefs)
+                    updateAppWidgetState(context, id) { prefs ->
+                        prefs[FavoritesWidget.FAVORITES_JSON] = favoritesJson
+                    }
                 }
 
                 val shufflePrefs = preferencesOf(
                     ShuffleWidget.HAS_SONGS to hasSongs
                 )
                 manager.getGlanceIds(ShuffleWidget::class.java).forEach { id ->
-                    ShuffleWidget().update(context, id, shufflePrefs)
+                    updateAppWidgetState(context, id) { prefs ->
+                        prefs[ShuffleWidget.HAS_SONGS] = hasSongs
+                    }
                 }
 
                 val qaPrefs = preferencesOf(
                     QuickActionsWidget.HAS_SONGS to hasSongs
                 )
                 manager.getGlanceIds(QuickActionsWidget::class.java).forEach { id ->
-                    QuickActionsWidget().update(context, id, qaPrefs)
+                    updateAppWidgetState(context, id) { prefs ->
+                        prefs[QuickActionsWidget.HAS_SONGS] = hasSongs
+                    }
                 }
 
             } catch (e: Exception) {

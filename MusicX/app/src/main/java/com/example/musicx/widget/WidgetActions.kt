@@ -55,8 +55,8 @@ object WidgetActions {
             ACTION_PLAY_PAUSE -> connectAndRun(context) { c ->
                 if (c.isPlaying) c.pause() else c.play()
             }
-            ACTION_NEXT -> connectAndRun(context) { it.next() }
-            ACTION_PREVIOUS -> connectAndRun(context) { it.previous() }
+            ACTION_NEXT -> connectAndRun(context) { it.seekToNext() }
+            ACTION_PREVIOUS -> connectAndRun(context) { it.seekToPrevious() }
             ACTION_SHUFFLE -> connectAndRun(context) {
                 it.shuffleModeEnabled = !it.shuffleModeEnabled
             }
