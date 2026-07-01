@@ -1,29 +1,24 @@
-<div align="center">
+# MusicX v1.6.1
 
-<img src="https://github.com/yummyfiles/MusicX/releases/download/v1.0.0/MusicX_README_Banner.png" width="100%">
+## What's new in this release
 
-<br>
+This release brings the latest set of improvements and new features for the Android app, including widget support, import flow updates, playback enhancements, and updated build configuration.
 
-<img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1500&color=FFFFFF&center=true&vCenter=true&width=800&lines=MusicX+v1.1.0;New+Release;Same+Great+Music+Player;Now+With+Better+Comments" />
+### Highlights
+- Added widget support for favorites, player controls, playlists, shuffle, and quick actions
+- Improved import and song management flow
+- Updated playback and settings handling for a smoother experience
+- Refreshed launcher resources and manifest configuration
+- Updated dependency and build settings for the current Android toolchain
 
-</div>
+### Included changes
+- New widget resources and XML definitions
+- Expanded playback service and audio fetching logic
+- UI and import screen improvements
+- Settings repository updates
+- Updated app icon foreground asset
+- Gradle and dependency version updates
 
----
-
-## yo whats new in this update
-
-### Code Comments Update
-- added casual comments across the entire codebase
-- now it actually sounds like a human wrote it instead of a robot
-- comments explain what stuff does in plain english
-- way easier to understand if youre learning kotlin
-
-### Files Updated
-- MusicXApplication.kt - crash handler and coil cache stuff
-- PlaybackService.kt - bass boost and notification handling
-- MiniPlayer.kt - the little player bar at the bottom
-- NowPlayingScreen.kt - lyrics, animations, marquee text
-- MusicRepository.kt - song loading and lyrics sync
-- SongsViewModel.kt - selection mode and playlist stuff
-- LyricsFetcher.kt - multi-source lyrics fetching
-- MusicXApp.kt - navigation and screen switching
+### Installation
+- Download the APK from this release page and install it on an Android device running Android 7.0 or newer.
+- If you have a previous version installed, the update should install over it normally.

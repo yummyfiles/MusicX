@@ -17,14 +17,12 @@ import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.musicx.data.SettingsRepository
 import com.example.musicx.ui.songs.SongsViewModel
 import com.example.musicx.ui.theme.MusicXTheme
 
@@ -32,12 +30,8 @@ import com.example.musicx.ui.theme.MusicXTheme
 @Composable
 fun ImportScreen(viewModel: SongsViewModel) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val settingsRepository = remember { SettingsRepository(context) }
-    val savedApiUrl by settingsRepository.ytApiBaseUrl.collectAsState(initial = "http://localhost:5000")
 
     var ytUrl by remember { mutableStateOf("") }
-    var apiUrl by remember(savedApiUrl) { mutableStateOf(savedApiUrl) }
     var showSuccess by remember { mutableStateOf(false) }
 
     val downloadState by viewModel.ytDownloadState.collectAsState()
@@ -120,16 +114,9 @@ fun ImportScreen(viewModel: SongsViewModel) {
             YtDownloadCard(
                 youtubeUrl = ytUrl,
                 onYoutubeUrlChange = { ytUrl = it },
-                apiUrl = apiUrl,
-                onApiUrlChange = {
-                    apiUrl = it
-                    scope.launch { settingsRepository.setYtApiBaseUrl(it) }
-                },
-                isDownloading = downloadState is SongsViewModel.YtDownloadState.RequestingToken
-                        || downloadState is SongsViewModel.YtDownloadState.Downloading
+                isDownloading = downloadState is SongsViewModel.YtDownloadState.Downloading
                         || downloadState is SongsViewModel.YtDownloadState.Importing,
                 downloadStatusText = when (downloadState) {
-                    is SongsViewModel.YtDownloadState.RequestingToken -> "Requesting token..."
                     is SongsViewModel.YtDownloadState.Downloading -> "Downloading audio..."
                     is SongsViewModel.YtDownloadState.Importing -> "Importing to library..."
                     else -> null
@@ -137,8 +124,8 @@ fun ImportScreen(viewModel: SongsViewModel) {
                 showSuccess = showSuccess,
                 onSuccessDismiss = { showSuccess = false },
                 onDownloadClick = {
-                    if (ytUrl.isNotBlank() && apiUrl.isNotBlank()) {
-                        viewModel.importFromYoutube(ytUrl.trim(), apiUrl.trim(), context.cacheDir)
+                    if (ytUrl.isNotBlank()) {
+                        viewModel.importFromYoutube(ytUrl.trim(), context.cacheDir)
                     }
                 }
             )
@@ -210,8 +197,6 @@ fun ImportCard(
 fun YtDownloadCard(
     youtubeUrl: String,
     onYoutubeUrlChange: (String) -> Unit,
-    apiUrl: String,
-    onApiUrlChange: (String) -> Unit,
     isDownloading: Boolean,
     downloadStatusText: String?,
     showSuccess: Boolean,
@@ -273,33 +258,6 @@ fun YtDownloadCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
-                value = apiUrl,
-                onValueChange = onApiUrlChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("e.g. http://192.168.1.100:5000", color = MusicXTheme.colors.inputHint) },
-                singleLine = true,
-                enabled = !isDownloading,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = MusicXTheme.colors.primaryText,
-                    unfocusedTextColor = MusicXTheme.colors.primaryText,
-                    focusedBorderColor = MusicXTheme.colors.primaryAccent,
-                    unfocusedBorderColor = MusicXTheme.colors.outlineVariant,
-                    focusedContainerColor = MusicXTheme.colors.inputBackground,
-                    unfocusedContainerColor = MusicXTheme.colors.inputBackground
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Text(
-                "Run the API server on your computer and enter its local IP here (not localhost — localhost on your phone is the phone itself).",
-                style = MaterialTheme.typography.bodySmall,
-                color = MusicXTheme.colors.secondaryText,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             downloadStatusText?.let {
                 if (it.isNotBlank()) {
                     Text(
@@ -327,7 +285,7 @@ fun YtDownloadCard(
                     .fillMaxWidth(0.6f)
                     .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = youtubeUrl.isNotBlank() && apiUrl.isNotBlank() && !isDownloading,
+                enabled = youtubeUrl.isNotBlank() && !isDownloading,
                 border = androidx.compose.foundation.BorderStroke(2.dp, MusicXTheme.colors.buttonOutline),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MusicXTheme.colors.buttonBackground,

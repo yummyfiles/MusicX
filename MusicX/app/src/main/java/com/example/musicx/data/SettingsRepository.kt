@@ -22,17 +22,6 @@ class SettingsRepository(private val context: Context) {
         val THEME_JSON = stringPreferencesKey("theme_json")
         val SAVED_THEMES_JSON = stringPreferencesKey("saved_themes_json")
         val GENERAL_SETTINGS_JSON = stringPreferencesKey("general_settings_json")
-        val YT_API_BASE_URL = stringPreferencesKey("yt_api_base_url")
-    }
-
-    val ytApiBaseUrl: Flow<String> = dataStore.data.map { preferences ->
-        preferences[YT_API_BASE_URL] ?: "http://localhost:5000"
-    }
-
-    suspend fun setYtApiBaseUrl(url: String) {
-        dataStore.edit { preferences ->
-            preferences[YT_API_BASE_URL] = url
-        }
     }
 
     val themeState: Flow<ThemeState> = dataStore.data.map { preferences ->

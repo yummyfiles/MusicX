@@ -13,8 +13,8 @@ android {
         applicationId = "com.example.musicx"
         minSdk = 24
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.6.0"
+        versionCode = 15
+        versionName = "1.6.1"
     }
 
     signingConfigs {
@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.room.ktx)

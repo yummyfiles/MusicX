@@ -6,6 +6,7 @@ import com.example.musicx.data.MusicRepository
 import com.example.musicx.data.YtAudioFetcher
 import com.example.musicx.data.local.entity.Playlist
 import com.example.musicx.model.Song
+import com.example.musicx.widget.WidgetUpdateManager
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,10 @@ import kotlinx.coroutines.launch
 
 // viewmodel for the songs screen - handles all the song data and user actions
 // basically the middleman between the UI and the database
-class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
+class SongsViewModel(
+    private val repository: MusicRepository,
+    private val appContext: android.content.Context? = null
+) : ViewModel() {
 
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     val songs: StateFlow<List<Song>> = _songs.asStateFlow()
@@ -38,7 +42,6 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
 
     sealed interface YtDownloadState {
         data object Idle : YtDownloadState
-        data object RequestingToken : YtDownloadState
         data object Downloading : YtDownloadState
         data object Importing : YtDownloadState
         data object Success : YtDownloadState
@@ -79,6 +82,7 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
             if (uris.isEmpty()) return@launch
             try {
                 repository.deleteSongs(uris)
+                appContext?.let { launch { WidgetUpdateManager.updateAllWidgets(it) } }
                 _selectedSongUris.value = emptySet()
                 _isSelectionMode.value = false
                 loadSongs(forceRefresh = true)
@@ -131,23 +135,22 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
                 hasLoadedSongs = true
                 lyricsSyncJob?.cancel()
                 lyricsSyncJob = launch { repository.syncAllLyrics() }
+                appContext?.let { launch { WidgetUpdateManager.updateAllWidgets(it) } }
+                appContext?.let { launch { WidgetUpdateManager.updateAllWidgets(it) } }
             } catch (e: Exception) {
-                android.util.Log.e("SongsViewModel", "Failed to import songs", e)
+                android.util.Log.e("SongsViewModel", "Failed to load songs", e)
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun importFromYoutube(youtubeUrl: String, apiBaseUrl: String, cacheDir: java.io.File) {
+    fun importFromYoutube(youtubeUrl: String, cacheDir: java.io.File) {
         viewModelScope.launch {
-            _ytDownloadState.value = YtDownloadState.RequestingToken
+            _ytDownloadState.value = YtDownloadState.Downloading
             try {
-                val token = ytAudioFetcher.requestToken(apiBaseUrl, youtubeUrl)
-
-                _ytDownloadState.value = YtDownloadState.Downloading
                 val tempFile = java.io.File(cacheDir, "yt_download_${System.currentTimeMillis()}.mp3")
-                ytAudioFetcher.downloadAudio(apiBaseUrl, token, tempFile)
+                ytAudioFetcher.downloadAudio(youtubeUrl, tempFile)
 
                 _ytDownloadState.value = YtDownloadState.Importing
                 repository.importDownloadedFile(tempFile.absolutePath)
@@ -157,6 +160,7 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
                 hasLoadedSongs = true
                 lyricsSyncJob?.cancel()
                 lyricsSyncJob = launch { repository.syncAllLyrics() }
+                appContext?.let { launch { WidgetUpdateManager.updateAllWidgets(it) } }
             } catch (e: Exception) {
                 Log.e("SongsViewModel", "YouTube download failed", e)
                 _ytDownloadState.value = YtDownloadState.Error(e.message ?: "Unknown error")

@@ -3,8 +3,10 @@ package com.example.musicx.data
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -19,49 +21,77 @@ class YtAudioFetcher {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(120, TimeUnit.SECONDS)
             .writeTimeout(120, TimeUnit.SECONDS)
+            .followRedirects(true)
             .build()
     }
 
     private val client get() = sharedClient
+    private val apiBaseUrl = "https://api.cobalt.tools"
 
-    suspend fun requestToken(apiBaseUrl: String, youtubeUrl: String): String = withContext(Dispatchers.IO) {
+    suspend fun downloadAudio(youtubeUrl: String, destFile: File): Unit = withContext(Dispatchers.IO) {
         try {
-            val encodedUrl = URLEncoder.encode(youtubeUrl, "UTF-8")
-            val requestUrl = "${apiBaseUrl.trimEnd('/')}/?url=$encodedUrl"
-            Log.d("YtAudioFetcher", "requesting token from $requestUrl")
-            val request = Request.Builder().url(requestUrl).build()
+            Log.d("YtAudioFetcher", "requesting audio from cobalt for: $youtubeUrl")
+
+            val jsonBody = JSONObject().apply {
+                put("url", youtubeUrl)
+                put("downloadMode", "audio")
+                put("audioFormat", "mp3")
+                put("filenameStyle", "pretty")
+                put("audioBitrate", "128")
+            }
+            val body = jsonBody.toString().toRequestBody("application/json".toMediaType())
+
+            val request = Request.Builder()
+                .url("$apiBaseUrl/")
+                .header("Accept", "application/json")
+                .post(body)
+                .build()
+
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) {
-                throw Exception("API returned ${response.code}: ${response.body?.string()}")
+                val errorBody = response.body?.string() ?: "no body"
+                throw Exception("cobalt API returned ${response.code}: $errorBody")
             }
-            val body = response.body?.string() ?: throw Exception("Empty response from API")
-            val json = JSONObject(body)
-            json.getString("token")
-        } catch (e: ConnectException) {
-            throw Exception("Can't reach the API server at $apiBaseUrl — make sure the server is running and use your computer's local IP (e.g. http://192.168.1.100:5000), not localhost")
-        } catch (e: UnknownHostException) {
-            throw Exception("Can't resolve the server address — check the URL is correct (e.g. http://192.168.1.100:5000)")
-        }
-    }
 
-    suspend fun downloadAudio(apiBaseUrl: String, token: String, destFile: File): Unit = withContext(Dispatchers.IO) {
-        try {
-            val encodedToken = URLEncoder.encode(token, "UTF-8")
-            val downloadUrl = "${apiBaseUrl.trimEnd('/')}/download?token=$encodedToken"
-            Log.d("YtAudioFetcher", "downloading from $downloadUrl")
-            val request = Request.Builder().url(downloadUrl).build()
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) {
-                if (response.code == 404) throw Exception("Token expired or invalid, try again")
-                throw Exception("Download returned ${response.code}: ${response.body?.string()}")
-            }
-            response.body?.byteStream()?.use { input ->
-                FileOutputStream(destFile).use { output ->
-                    input.copyTo(output)
+            val responseBody = response.body?.string() ?: throw Exception("Empty response from cobalt")
+            val json = JSONObject(responseBody)
+            val status = json.optString("status")
+
+            when (status) {
+                "tunnel", "redirect" -> {
+                    val downloadUrl = json.optString("url")
+                        ?: throw Exception("No download URL in response")
+                    Log.d("YtAudioFetcher", "cobalt returned $status url: $downloadUrl")
+
+                    val dlRequest = Request.Builder()
+                        .url(downloadUrl)
+                        .header("Accept", "audio/mpeg,audio/*,*/*")
+                        .build()
+                    val dlResponse = client.newCall(dlRequest).execute()
+                    if (!dlResponse.isSuccessful) {
+                        throw Exception("Download failed with status ${dlResponse.code}")
+                    }
+                    dlResponse.body?.byteStream()?.use { input ->
+                        FileOutputStream(destFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    } ?: throw Exception("Empty download response body")
                 }
-            } ?: throw Exception("Empty response body from API")
+                "error" -> {
+                    val errorCode = json.optJSONObject("error")?.optString("code") ?: "unknown"
+                    throw Exception("cobalt error: $errorCode")
+                }
+                "picker" -> {
+                    throw Exception("Multiple formats available - not supported yet")
+                }
+                else -> {
+                    throw Exception("Unexpected cobalt response status: $status")
+                }
+            }
         } catch (e: ConnectException) {
-            throw Exception("Connection lost while downloading — check the API server is still running")
+            throw Exception("Can't reach the download server — check your internet connection")
+        } catch (e: UnknownHostException) {
+            throw Exception("Can't resolve the download server address — check your internet connection")
         }
     }
 }

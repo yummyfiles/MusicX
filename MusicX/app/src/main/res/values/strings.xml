@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">MusicX</string>
+    <string name="favorites_widget_description">Favorite Songs</string>
+    <string name="large_album_widget_description">Large Album Art Widget</string>
+    <string name="medium_player_widget_description">Medium Music Player</string>
+    <string name="mini_player_widget_description">Mini Music Player</string>
+    <string name="playlist_launcher_widget_description">Playlist Launcher</string>
+    <string name="quick_actions_widget_description">Quick Actions</string>
+    <string name="shuffle_widget_description">Shuffle All</string>
 </resources>
