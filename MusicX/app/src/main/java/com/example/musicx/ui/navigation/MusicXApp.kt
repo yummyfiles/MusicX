@@ -223,13 +223,7 @@ fun MusicXApp(
                                     onBack = { popBackStack() }
                                 )
                             }
-                            is Destination.Import -> NavEntry(destination) {
-                                ImportScreen(
-                                    viewModel = songsViewModel,
-                                    generalSettings = generalSettings,
-                                    onUpdateGeneralSettings = { update -> settingsViewModel.updateGeneralSettings(update) }
-                                )
-                            }
+                            is Destination.Import -> NavEntry(destination) { ImportScreen(songsViewModel) }
                             is Destination.Search -> NavEntry(destination) { 
                                 SearchScreen(
                                     viewModel = songsViewModel,

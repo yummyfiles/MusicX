@@ -23,25 +23,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.musicx.data.GeneralSettings
 import com.example.musicx.ui.songs.SongsViewModel
 import com.example.musicx.ui.theme.MusicXTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImportScreen(
-    viewModel: SongsViewModel,
-    generalSettings: GeneralSettings = GeneralSettings(),
-    onUpdateGeneralSettings: ((GeneralSettings) -> GeneralSettings) -> Unit = {}
-) {
+fun ImportScreen(viewModel: SongsViewModel) {
     val context = LocalContext.current
 
     var ytUrl by remember { mutableStateOf("") }
     var showSuccess by remember { mutableStateOf(false) }
-
-    var cobaltInstanceUrl by remember(generalSettings.cobaltInstanceUrl) { mutableStateOf(generalSettings.cobaltInstanceUrl) }
-    var cobaltApiKey by remember(generalSettings.cobaltApiKey) { mutableStateOf(generalSettings.cobaltApiKey) }
-    var showAdvanced by remember { mutableStateOf(false) }
 
     val downloadState by viewModel.ytDownloadState.collectAsState()
 
@@ -132,18 +123,9 @@ fun ImportScreen(
                 },
                 showSuccess = showSuccess,
                 onSuccessDismiss = { showSuccess = false },
-                cobaltInstanceUrl = cobaltInstanceUrl,
-                cobaltApiKey = cobaltApiKey,
-                showAdvanced = showAdvanced,
-                onToggleAdvanced = { showAdvanced = !showAdvanced },
-                onInstanceUrlChange = { cobaltInstanceUrl = it },
-                onApiKeyChange = { cobaltApiKey = it },
-                onSaveSettings = {
-                    onUpdateGeneralSettings { it.copy(cobaltInstanceUrl = cobaltInstanceUrl, cobaltApiKey = cobaltApiKey) }
-                },
                 onDownloadClick = {
                     if (ytUrl.isNotBlank()) {
-                        viewModel.importFromYoutube(ytUrl.trim(), context.cacheDir, cobaltInstanceUrl, cobaltApiKey)
+                        viewModel.importFromYoutube(ytUrl.trim(), context.cacheDir)
                     }
                 }
             )
@@ -211,7 +193,6 @@ fun ImportCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun YtDownloadCard(
     youtubeUrl: String,
@@ -220,13 +201,6 @@ fun YtDownloadCard(
     downloadStatusText: String?,
     showSuccess: Boolean,
     onSuccessDismiss: () -> Unit,
-    cobaltInstanceUrl: String = "https://api.cobalt.tools",
-    cobaltApiKey: String = "",
-    showAdvanced: Boolean = false,
-    onToggleAdvanced: () -> Unit = {},
-    onInstanceUrlChange: (String) -> Unit = {},
-    onApiKeyChange: (String) -> Unit = {},
-    onSaveSettings: () -> Unit = {},
     onDownloadClick: () -> Unit
 ) {
     Card(
@@ -302,70 +276,6 @@ fun YtDownloadCard(
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            TextButton(onClick = onToggleAdvanced) {
-                Text(
-                    if (showAdvanced) "Hide advanced settings" else "Advanced settings",
-                    color = MusicXTheme.colors.secondaryText,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            if (showAdvanced) {
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = cobaltInstanceUrl,
-                    onValueChange = onInstanceUrlChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Cobalt instance URL", color = MusicXTheme.colors.inputHint) },
-                    placeholder = { Text("https://api.cobalt.tools", color = MusicXTheme.colors.inputHint) },
-                    singleLine = true,
-                    enabled = !isDownloading,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = MusicXTheme.colors.primaryText,
-                        unfocusedTextColor = MusicXTheme.colors.primaryText,
-                        focusedBorderColor = MusicXTheme.colors.primaryAccent,
-                        unfocusedBorderColor = MusicXTheme.colors.outlineVariant,
-                        focusedContainerColor = MusicXTheme.colors.inputBackground,
-                        unfocusedContainerColor = MusicXTheme.colors.inputBackground
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = cobaltApiKey,
-                    onValueChange = onApiKeyChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("API key", color = MusicXTheme.colors.inputHint) },
-                    placeholder = { Text("Leave blank if not required", color = MusicXTheme.colors.inputHint) },
-                    singleLine = true,
-                    enabled = !isDownloading,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = MusicXTheme.colors.primaryText,
-                        unfocusedTextColor = MusicXTheme.colors.primaryText,
-                        focusedBorderColor = MusicXTheme.colors.primaryAccent,
-                        unfocusedBorderColor = MusicXTheme.colors.outlineVariant,
-                        focusedContainerColor = MusicXTheme.colors.inputBackground,
-                        unfocusedContainerColor = MusicXTheme.colors.inputBackground
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = onSaveSettings,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MusicXTheme.colors.buttonBackground,
-                        contentColor = MusicXTheme.colors.buttonText
-                    )
-                ) {
-                    Text("Save settings")
-                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
 

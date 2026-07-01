@@ -46,9 +46,5 @@ data class GeneralSettings(
     val showSplash: Boolean = true,
 
     // Tabs
-    val visibleTabs: List<String> = listOf("Songs", "Playlists", "Import", "Search", "Settings"),
-
-    // Cobalt / YouTube download
-    val cobaltInstanceUrl: String = "https://api.cobalt.tools",
-    val cobaltApiKey: String = ""
+    val visibleTabs: List<String> = listOf("Songs", "Playlists", "Import", "Search", "Settings")
 )

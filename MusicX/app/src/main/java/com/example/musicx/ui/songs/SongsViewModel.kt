@@ -145,12 +145,12 @@ class SongsViewModel(
         }
     }
 
-    fun importFromYoutube(youtubeUrl: String, cacheDir: java.io.File, instanceUrl: String? = null, apiKey: String? = null) {
+    fun importFromYoutube(youtubeUrl: String, cacheDir: java.io.File) {
         viewModelScope.launch {
             _ytDownloadState.value = YtDownloadState.Downloading
             try {
                 val tempFile = java.io.File(cacheDir, "yt_download_${System.currentTimeMillis()}.mp3")
-                ytAudioFetcher.downloadAudio(youtubeUrl, tempFile, instanceUrl ?: "https://api.cobalt.tools", apiKey ?: "")
+                ytAudioFetcher.downloadAudio(youtubeUrl, tempFile)
 
                 _ytDownloadState.value = YtDownloadState.Importing
                 repository.importDownloadedFile(tempFile.absolutePath)
