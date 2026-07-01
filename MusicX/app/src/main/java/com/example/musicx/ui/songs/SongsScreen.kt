@@ -2,16 +2,19 @@ package com.example.musicx.ui.songs
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -19,14 +22,18 @@ import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,9 +54,9 @@ fun SongsScreen(
     onSongClick: (Song) -> Unit,
     onSongLongClick: (Song) -> Unit,
     onEditMetadata: (Long) -> Unit,
-    onBrowseArtists: () -> Unit = {},
-    onBrowseAlbums: () -> Unit = {},
-    onBrowseGenres: () -> Unit = {}
+    onArtistClick: (String) -> Unit = {},
+    onAlbumClick: (String) -> Unit = {},
+    onGenreClick: (String) -> Unit = {}
 ) {
     val songs by viewModel.songs.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -58,6 +65,30 @@ fun SongsScreen(
     val playlists by viewModel.playlists.collectAsState()
     val likedSongs = remember(songs) { songs.filter { it.isLiked } }
     val unlikedSongs = remember(songs) { songs.filter { !it.isLiked } }
+
+    val artists = remember(songs) {
+        songs.map { it.artist }.filter { it.isNotBlank() }.distinct().sorted()
+    }
+    val albums = remember(songs) {
+        songs.map { it.album }.filter { it.isNotBlank() }.distinct().sorted()
+    }
+    val genres = remember(songs) {
+        songs.map { it.genre }.filter { it.isNotBlank() }.distinct().sorted()
+    }
+
+    val songCountByArtist = remember(songs) {
+        songs.groupingBy { it.artist }.eachCount()
+    }
+    val songCountByAlbum = remember(songs) {
+        songs.groupingBy { it.album }.eachCount()
+    }
+    val songCountByGenre = remember(songs) {
+        songs.groupingBy { it.genre }.eachCount()
+    }
+
+    var showArtists by remember { mutableStateOf(false) }
+    var showAlbums by remember { mutableStateOf(false) }
+    var showGenres by remember { mutableStateOf(false) }
     
     // Track current playing song for UI feedback
     var currentMediaId by remember { mutableStateOf<String?>(null) }
@@ -166,33 +197,34 @@ fun SongsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item(key = "browse_sections", contentType = "browse_sections") {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(
-                            "Browse Library",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MusicXTheme.colors.primaryAccent,
-                            fontWeight = FontWeight.Bold
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        InlineBrowseSection(
+                            title = "Artists",
+                            icon = Icons.Rounded.Person,
+                            items = artists,
+                            countByKey = songCountByArtist,
+                            expanded = showArtists,
+                            onToggle = { showArtists = !showArtists },
+                            onItemClick = onArtistClick
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            BrowseSectionCard(
-                                title = "Artists",
-                                icon = Icons.Rounded.Person,
-                                onClick = onBrowseArtists,
-                                modifier = Modifier.weight(1f)
-                            )
-                            BrowseSectionCard(
-                                title = "Albums",
-                                icon = Icons.Rounded.Album,
-                                onClick = onBrowseAlbums,
-                                modifier = Modifier.weight(1f)
-                            )
-                            BrowseSectionCard(
-                                title = "Genres",
-                                icon = Icons.Rounded.MusicNote,
-                                onClick = onBrowseGenres,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                        InlineBrowseSection(
+                            title = "Albums",
+                            icon = Icons.Rounded.Album,
+                            items = albums,
+                            countByKey = songCountByAlbum,
+                            expanded = showAlbums,
+                            onToggle = { showAlbums = !showAlbums },
+                            onItemClick = onAlbumClick
+                        )
+                        InlineBrowseSection(
+                            title = "Genres",
+                            icon = Icons.Rounded.MusicNote,
+                            items = genres,
+                            countByKey = songCountByGenre,
+                            expanded = showGenres,
+                            onToggle = { showGenres = !showGenres },
+                            onItemClick = onGenreClick
+                        )
                     }
                 }
 
@@ -287,39 +319,97 @@ fun SongsScreen(
 }
 
 @Composable
-private fun BrowseSectionCard(
+private fun InlineBrowseSection(
     title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    icon: ImageVector,
+    items: List<String>,
+    countByKey: Map<String, Int>,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    onItemClick: (String) -> Unit
 ) {
-    Card(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MusicXTheme.colors.surface)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MusicXTheme.colors.surface)
+            .animateContentSize()
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 14.dp, horizontal = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .clickable(onClick = onToggle)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MusicXTheme.colors.primaryAccent,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(22.dp)
             )
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleSmall,
                 color = MusicXTheme.colors.primaryText,
                 fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                modifier = Modifier.weight(1f)
             )
+            Text(
+                text = "${items.size}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MusicXTheme.colors.secondaryText
+            )
+            Icon(
+                imageVector = if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                contentDescription = if (expanded) "Collapse" else "Expand",
+                tint = MusicXTheme.colors.iconSecondary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        AnimatedVisibility(visible = expanded) {
+            Column {
+                if (items.isEmpty()) {
+                    Text(
+                        text = "No $title found",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MusicXTheme.colors.secondaryText,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                } else {
+                    items.forEach { name ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onItemClick(name) }
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MusicXTheme.colors.iconSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MusicXTheme.colors.primaryText,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "${countByKey[name] ?: 0} song${if ((countByKey[name] ?: 0) != 1) "s" else ""}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MusicXTheme.colors.secondaryText
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

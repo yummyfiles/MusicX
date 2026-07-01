@@ -23,10 +23,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import com.example.musicx.playback.MusicController
-import com.example.musicx.ui.browse.AlbumsScreen
-import com.example.musicx.ui.browse.ArtistsScreen
 import com.example.musicx.ui.browse.FilteredSongsList
-import com.example.musicx.ui.browse.GenresScreen
 import com.example.musicx.ui.components.MiniPlayer
 import com.example.musicx.ui.components.MusicXIcons
 import com.example.musicx.ui.songs.SongsScreen
@@ -120,7 +117,7 @@ fun MusicXApp(
     Scaffold(
         bottomBar = {
             AnimatedVisibility(
-                visible = isMobile && currentDestination !is Destination.NowPlaying && currentDestination !is Destination.ArtistSongs && currentDestination !is Destination.AlbumSongs && currentDestination !is Destination.GenreSongs && currentDestination !is Destination.Artists && currentDestination !is Destination.Albums && currentDestination !is Destination.Genres,
+                visible = isMobile && currentDestination !is Destination.NowPlaying && currentDestination !is Destination.ArtistSongs && currentDestination !is Destination.AlbumSongs && currentDestination !is Destination.GenreSongs,
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
@@ -175,33 +172,9 @@ fun MusicXApp(
                                     onEditMetadata = { songId ->
                                         backStack.add(Destination.EditMetadata(songId))
                                     },
-                                    onBrowseArtists = { backStack.add(Destination.Artists) },
-                                    onBrowseAlbums = { backStack.add(Destination.Albums) },
-                                    onBrowseGenres = { backStack.add(Destination.Genres) }
-                                )
-                            }
-                            is Destination.Artists -> NavEntry(destination) {
-                                ArtistsScreen(
-                                    songs = songs,
-                                    onArtistClick = { artist ->
-                                        backStack.add(Destination.ArtistSongs(artist))
-                                    }
-                                )
-                            }
-                            is Destination.Albums -> NavEntry(destination) {
-                                AlbumsScreen(
-                                    songs = songs,
-                                    onAlbumClick = { album ->
-                                        backStack.add(Destination.AlbumSongs(album))
-                                    }
-                                )
-                            }
-                            is Destination.Genres -> NavEntry(destination) {
-                                GenresScreen(
-                                    songs = songs,
-                                    onGenreClick = { genre ->
-                                        backStack.add(Destination.GenreSongs(genre))
-                                    }
+                                    onArtistClick = { artist -> backStack.add(Destination.ArtistSongs(artist)) },
+                                    onAlbumClick = { album -> backStack.add(Destination.AlbumSongs(album)) },
+                                    onGenreClick = { genre -> backStack.add(Destination.GenreSongs(genre)) }
                                 )
                             }
                             is Destination.ArtistSongs -> NavEntry(destination) {

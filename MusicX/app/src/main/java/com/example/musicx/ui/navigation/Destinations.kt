@@ -7,12 +7,6 @@ sealed interface Destination : NavKey {
     @Serializable
     data object Songs : Destination
     @Serializable
-    data object Artists : Destination
-    @Serializable
-    data object Albums : Destination
-    @Serializable
-    data object Genres : Destination
-    @Serializable
     data object Playlists : Destination
     @Serializable
     data object Import : Destination
