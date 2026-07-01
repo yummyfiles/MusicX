@@ -9,6 +9,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
@@ -44,7 +45,10 @@ fun SongsScreen(
     mediaController: androidx.media3.session.MediaController? = null,
     onSongClick: (Song) -> Unit,
     onSongLongClick: (Song) -> Unit,
-    onEditMetadata: (Long) -> Unit
+    onEditMetadata: (Long) -> Unit,
+    onBrowseArtists: () -> Unit = {},
+    onBrowseAlbums: () -> Unit = {},
+    onBrowseGenres: () -> Unit = {}
 ) {
     val songs by viewModel.songs.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -160,6 +164,37 @@ fun SongsScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                item(key = "browse_sections", contentType = "browse_sections") {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            "Browse Library",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MusicXTheme.colors.primaryAccent,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            BrowseSectionCard(
+                                title = "Artists",
+                                icon = Icons.Rounded.Person,
+                                onClick = onBrowseArtists,
+                                modifier = Modifier.weight(1f)
+                            )
+                            BrowseSectionCard(
+                                title = "Albums",
+                                icon = Icons.Rounded.Album,
+                                onClick = onBrowseAlbums,
+                                modifier = Modifier.weight(1f)
+                            )
+                            BrowseSectionCard(
+                                title = "Genres",
+                                icon = Icons.Rounded.MusicNote,
+                                onClick = onBrowseGenres,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
                 if (likedSongs.isNotEmpty()) {
                     item(key = "liked_header", contentType = "header") {
                         Text(
@@ -247,6 +282,44 @@ fun SongsScreen(
                 showPlaylistDialog = false
             }
         )
+    }
+}
+
+@Composable
+private fun BrowseSectionCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MusicXTheme.colors.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 14.dp, horizontal = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MusicXTheme.colors.primaryAccent,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MusicXTheme.colors.primaryText,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 

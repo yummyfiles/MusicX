@@ -46,5 +46,5 @@ data class GeneralSettings(
     val showSplash: Boolean = true,
 
     // Tabs
-    val visibleTabs: List<String> = listOf("Songs", "Artists", "Albums", "Genres", "Playlists", "Import", "Search", "Settings")
+    val visibleTabs: List<String> = listOf("Songs", "Playlists", "Import", "Search", "Settings")
 )

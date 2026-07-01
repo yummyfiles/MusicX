@@ -20,9 +20,6 @@ private data class TabOption(val id: String, val label: String)
 
 private val ALL_TAB_OPTIONS = listOf(
     TabOption("Songs", "Songs"),
-    TabOption("Artists", "Artists"),
-    TabOption("Albums", "Albums"),
-    TabOption("Genres", "Genres"),
     TabOption("Playlists", "Playlists"),
     TabOption("Import", "Import"),
     TabOption("Search", "Search"),

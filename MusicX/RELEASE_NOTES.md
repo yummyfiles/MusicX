@@ -1,5 +1,11 @@
 # MusicX v1.6.1
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/e75601e1-80c5-411a-b6f7-9e80a948d7ef" alt="MusicX banner" width="100%" />
+  <br />
+  <img src="https://github.com/user-attachments/assets/8df23469-e7e6-46ee-8d5f-f50e4a5aa03c" alt="MusicX visualizer" width="100%" />
+</div>
+
 ## What's new in this release
 
 This release brings the latest set of improvements and new features for the Android app, including widget support, import flow updates, playback enhancements, and updated build configuration.

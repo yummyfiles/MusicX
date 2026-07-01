@@ -22,9 +22,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Album
-import androidx.compose.material.icons.rounded.MusicNote
 import com.example.musicx.playback.MusicController
 import com.example.musicx.ui.browse.AlbumsScreen
 import com.example.musicx.ui.browse.ArtistsScreen
@@ -62,9 +59,6 @@ data class TabDef(
 
 private val ALL_TABS = listOf(
     TabDef("Songs", "Songs", MusicXIcons.Songs, Destination.Songs, { it is Destination.Songs }),
-    TabDef("Artists", "Artists", Icons.Rounded.Person, Destination.Artists, { it is Destination.Artists }),
-    TabDef("Albums", "Albums", Icons.Rounded.Album, Destination.Albums, { it is Destination.Albums }),
-    TabDef("Genres", "Genres", Icons.Rounded.MusicNote, Destination.Genres, { it is Destination.Genres }),
     TabDef("Playlists", "Playlists", MusicXIcons.Playlists, Destination.Playlists, { it is Destination.Playlists || it is Destination.PlaylistDetail }),
     TabDef("Import", "Import", MusicXIcons.Import, Destination.Import, { it is Destination.Import }),
     TabDef("Search", "Search", MusicXIcons.Search, Destination.Search, { it is Destination.Search }),
@@ -126,7 +120,7 @@ fun MusicXApp(
     Scaffold(
         bottomBar = {
             AnimatedVisibility(
-                visible = isMobile && currentDestination !is Destination.NowPlaying && currentDestination !is Destination.ArtistSongs && currentDestination !is Destination.AlbumSongs && currentDestination !is Destination.GenreSongs,
+                visible = isMobile && currentDestination !is Destination.NowPlaying && currentDestination !is Destination.ArtistSongs && currentDestination !is Destination.AlbumSongs && currentDestination !is Destination.GenreSongs && currentDestination !is Destination.Artists && currentDestination !is Destination.Albums && currentDestination !is Destination.Genres,
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it })
             ) {
@@ -180,7 +174,10 @@ fun MusicXApp(
                                     },
                                     onEditMetadata = { songId ->
                                         backStack.add(Destination.EditMetadata(songId))
-                                    }
+                                    },
+                                    onBrowseArtists = { backStack.add(Destination.Artists) },
+                                    onBrowseAlbums = { backStack.add(Destination.Albums) },
+                                    onBrowseGenres = { backStack.add(Destination.Genres) }
                                 )
                             }
                             is Destination.Artists -> NavEntry(destination) {
