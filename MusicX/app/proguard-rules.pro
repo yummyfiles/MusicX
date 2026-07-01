@@ -44,3 +44,20 @@
     public static *** v(...);
     public static *** i(...);
 }
+
+# Keep all GlanceAppWidget subclasses and their provideGlance method
+-keep class com.example.musicx.widget.** extends androidx.glance.appwidget.GlanceAppWidget {
+    *;
+}
+-keep class com.example.musicx.widget.** extends androidx.glance.appwidget.GlanceAppWidgetReceiver {
+    *;
+}
+-keep class com.example.musicx.widget.WidgetActionCallback { *; }
+-keep class com.example.musicx.widget.WidgetUpdateManager { *; }
+-keep class com.example.musicx.widget.WidgetUpdateReceiver { *; }
+-keep class com.example.musicx.widget.WidgetActions { *; }
+-keep class com.example.musicx.widget.WidgetState { *; }
+
+# Keep Glance framework classes
+-keep class androidx.glance.** { *; }
+-keep class androidx.glance.appwidget.** { *; }
