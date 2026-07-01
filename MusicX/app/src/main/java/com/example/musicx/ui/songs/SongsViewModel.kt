@@ -6,6 +6,7 @@ import com.example.musicx.data.MusicRepository
 import com.example.musicx.data.YtAudioFetcher
 import com.example.musicx.data.local.entity.Playlist
 import com.example.musicx.model.Song
+import com.example.musicx.widget.WidgetUpdateManager
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -81,6 +82,7 @@ class SongsViewModel(
             if (uris.isEmpty()) return@launch
             try {
                 repository.deleteSongs(uris)
+                appContext?.let { launch { WidgetUpdateManager.updateAllWidgets(it) } }
                 _selectedSongUris.value = emptySet()
                 _isSelectionMode.value = false
                 loadSongs(forceRefresh = true)
@@ -133,6 +135,8 @@ class SongsViewModel(
                 hasLoadedSongs = true
                 lyricsSyncJob?.cancel()
                 lyricsSyncJob = launch { repository.syncAllLyrics() }
+                appContext?.let { launch { WidgetUpdateManager.updateAllWidgets(it) } }
+                appContext?.let { launch { WidgetUpdateManager.updateAllWidgets(it) } }
             } catch (e: Exception) {
                 android.util.Log.e("SongsViewModel", "Failed to load songs", e)
             } finally {
@@ -156,6 +160,7 @@ class SongsViewModel(
                 hasLoadedSongs = true
                 lyricsSyncJob?.cancel()
                 lyricsSyncJob = launch { repository.syncAllLyrics() }
+                appContext?.let { launch { WidgetUpdateManager.updateAllWidgets(it) } }
             } catch (e: Exception) {
                 Log.e("SongsViewModel", "YouTube download failed", e)
                 _ytDownloadState.value = YtDownloadState.Error(e.message ?: "Unknown error")

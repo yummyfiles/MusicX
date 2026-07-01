@@ -14,6 +14,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.example.musicx.data.GeneralSettings
 import com.example.musicx.data.SettingsRepository
+import com.example.musicx.widget.WidgetUpdateManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -86,6 +87,7 @@ class PlaybackService : MediaSessionService() {
 
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
+            serviceScope.launch { WidgetUpdateManager.updateAllWidgets(this@PlaybackService) }
             if (playbackState == Player.STATE_ENDED) {
                 val player = mediaSession?.player ?: return
                 val settings = currentSettings
@@ -100,6 +102,7 @@ class PlaybackService : MediaSessionService() {
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            serviceScope.launch { WidgetUpdateManager.updateAllWidgets(this@PlaybackService) }
             val player = mediaSession?.player ?: return
             val settings = currentSettings
 
@@ -122,6 +125,7 @@ class PlaybackService : MediaSessionService() {
             newPosition: Player.PositionInfo,
             reason: Int
         ) {
+            serviceScope.launch { WidgetUpdateManager.updateAllWidgets(this@PlaybackService) }
             if (reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION) {
                 val settings = currentSettings
                 if (settings.rememberPosition) {
@@ -194,6 +198,7 @@ class PlaybackService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     override fun onDestroy() {
+        serviceScope.launch { WidgetUpdateManager.updateAllWidgets(this@PlaybackService) }
         mediaSession?.run {
             player.release()
             release()

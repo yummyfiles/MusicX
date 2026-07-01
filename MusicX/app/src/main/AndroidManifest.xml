@@ -50,6 +50,83 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <receiver
+            android:name=".widget.MiniPlayerWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/mini_player_widget" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.MediumPlayerWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/medium_player_widget" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.LargeAlbumWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/large_album_widget" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.FavoritesWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/favorites_widget" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.PlaylistLauncherWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/playlist_launcher_widget" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.QuickActionsWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/quick_actions_widget" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.ShuffleWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/shuffle_widget" />
+        </receiver>
+
     </application>
 
 </manifest>
