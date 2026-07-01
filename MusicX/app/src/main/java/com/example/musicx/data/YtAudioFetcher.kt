@@ -26,11 +26,15 @@ class YtAudioFetcher {
     }
 
     private val client get() = sharedClient
-    private val apiBaseUrl = "https://api.cobalt.tools"
 
-    suspend fun downloadAudio(youtubeUrl: String, destFile: File): Unit = withContext(Dispatchers.IO) {
+    suspend fun downloadAudio(
+        youtubeUrl: String,
+        destFile: File,
+        instanceUrl: String = "https://api.cobalt.tools",
+        apiKey: String = ""
+    ): Unit = withContext(Dispatchers.IO) {
         try {
-            Log.d("YtAudioFetcher", "requesting audio from cobalt for: $youtubeUrl")
+            Log.d("YtAudioFetcher", "requesting audio from $instanceUrl for: $youtubeUrl")
 
             val jsonBody = JSONObject().apply {
                 put("url", youtubeUrl)
@@ -41,11 +45,14 @@ class YtAudioFetcher {
             }
             val body = jsonBody.toString().toRequestBody("application/json".toMediaType())
 
-            val request = Request.Builder()
-                .url("$apiBaseUrl/")
+            val requestBuilder = Request.Builder()
+                .url("$instanceUrl/")
                 .header("Accept", "application/json")
                 .post(body)
-                .build()
+            if (apiKey.isNotBlank()) {
+                requestBuilder.header("Authorization", "Api-Key $apiKey")
+            }
+            val request = requestBuilder.build()
 
             val response = client.newCall(request).execute()
             if (!response.isSuccessful) {
