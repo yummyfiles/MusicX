@@ -1,8 +1,11 @@
 package com.example.musicx.ui.settings
 
+import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Environment
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -24,10 +27,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.musicx.BuildConfig
 import androidx.compose.ui.unit.sp
 import com.example.musicx.data.GeneralSettings
 import com.example.musicx.ui.navigation.Destination
 import com.example.musicx.ui.theme.MusicXTheme
+import java.io.File
 import java.net.URLEncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -193,7 +198,17 @@ fun SettingsScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(state.url)))
+                        scope.launch {
+                            val installUri = withContext(Dispatchers.IO) { downloadAndPrepareUpdate(context, state.downloadUrl) }
+                            if (installUri != null) {
+                                val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                                    setDataAndType(installUri, "application/vnd.android.package-archive")
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(installIntent)
+                            }
+                        }
                         updateCheckState = UpdateCheckState.Idle
                     }) {
                         Text("Download", color = MusicXTheme.colors.primaryAccent)
@@ -370,7 +385,7 @@ private sealed class UpdateCheckState {
     data object Idle : UpdateCheckState()
     data object Checking : UpdateCheckState()
     data class Latest(val version: String) : UpdateCheckState()
-    data class Available(val version: String, val url: String) : UpdateCheckState()
+    data class Available(val version: String, val downloadUrl: String) : UpdateCheckState()
     data class Error(val message: String) : UpdateCheckState()
 }
 
@@ -386,26 +401,65 @@ private fun checkForUpdate(): UpdateCheckState {
             return UpdateCheckState.Error("GitHub API returned ${response.code}")
         }
         val body = response.body?.string() ?: return UpdateCheckState.Error("Empty response")
-        val json = JSONObject(body)
-        val latestTag = json.optString("tag_name", "").removePrefix("v")
-        val htmlUrl = json.optString("html_url", "")
-        if (latestTag.isBlank()) return UpdateCheckState.Error("No version found")
-
-        val currentVersion = "1.6.0"
+        val parsed = UpdateReleaseParser.parse(body, BuildConfig.VERSION_NAME)
+        if (parsed.version.isBlank()) return UpdateCheckState.Error("No version found")
+        val currentVersion = BuildConfig.VERSION_NAME.removePrefix("v")
         val currentParts = currentVersion.split(".").map { it.toIntOrNull() ?: 0 }
-        val latestParts = latestTag.split(".").map { it.toIntOrNull() ?: 0 }
+        val latestParts = parsed.version.split(".").map { it.toIntOrNull() ?: 0 }
 
         for (i in 0 until maxOf(currentParts.size, latestParts.size)) {
             val c = currentParts.getOrElse(i) { 0 }
             val l = latestParts.getOrElse(i) { 0 }
             when {
-                l > c -> return UpdateCheckState.Available(latestTag, htmlUrl)
+                l > c -> return UpdateCheckState.Available(parsed.version, parsed.downloadUrl)
                 l < c -> return UpdateCheckState.Latest(currentVersion)
             }
         }
         UpdateCheckState.Latest(currentVersion)
     } catch (e: Exception) {
         UpdateCheckState.Error(e.message ?: "Unknown error")
+    }
+}
+
+private fun downloadAndPrepareUpdate(context: Context, url: String): Uri? {
+    return try {
+        val fileName = "musicx-update-${System.currentTimeMillis()}.apk"
+        val downloadDir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "updates")
+        if (!downloadDir.exists()) downloadDir.mkdirs()
+        val outputFile = File(downloadDir, fileName)
+
+        val request = DownloadManager.Request(Uri.parse(url))
+            .setTitle("MusicX update")
+            .setDescription("Downloading latest MusicX update")
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            .setDestinationUri(Uri.fromFile(outputFile))
+            .setAllowedOverMetered(true)
+            .setAllowedOverRoaming(true)
+
+        val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        val downloadId = manager.enqueue(request)
+        val query = DownloadManager.Query().setFilterById(downloadId)
+        var status = DownloadManager.STATUS_PENDING
+        var uri: Uri? = null
+        var attempts = 0
+        while (attempts < 60 && uri == null) {
+            Thread.sleep(1000)
+            attempts++
+            val cursor = manager.query(query)
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                    if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                        val localUri = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI))
+                        uri = Uri.parse(localUri)
+                    }
+                }
+                cursor.close()
+            }
+        }
+        uri ?: Uri.fromFile(outputFile)
+    } catch (_: Exception) {
+        null
     }
 }
 
