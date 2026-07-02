@@ -149,8 +149,7 @@ class SongsViewModel(
         viewModelScope.launch {
             _ytDownloadState.value = YtDownloadState.Downloading
             try {
-                val tempFile = java.io.File(cacheDir, "yt_download_${System.currentTimeMillis()}.mp3")
-                ytAudioFetcher.downloadAudio(youtubeUrl, tempFile)
+                val tempFile = ytAudioFetcher.downloadAudio(youtubeUrl, cacheDir)
 
                 _ytDownloadState.value = YtDownloadState.Importing
                 repository.importDownloadedFile(tempFile.absolutePath)

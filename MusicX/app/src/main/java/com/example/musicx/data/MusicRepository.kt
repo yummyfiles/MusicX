@@ -333,8 +333,9 @@ class MusicRepository(private val context: Context) {
             emptySet()
         }
 
-        val realName = file.name.substringBeforeLast(".")
-        val fileName = "music_${System.currentTimeMillis()}_${realName.replace(" ", "_")}.mp3"
+        val realName = file.nameWithoutExtension
+        val ext = file.extension
+        val fileName = "music_${System.currentTimeMillis()}_${realName.replace(" ", "_")}.$ext"
         val destFile = File(storageDir, fileName)
         file.copyTo(destFile, overwrite = true)
         file.delete()
