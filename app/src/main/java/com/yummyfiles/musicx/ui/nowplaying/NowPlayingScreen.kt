@@ -371,7 +371,7 @@ fun NowPlayingScreen(
                             Icon(
                                 Icons.Rounded.Shuffle,
                                 contentDescription = "Shuffle",
-                                tint = if (shuffleEnabled) MusicXTheme.colors.primaryAccent else MusicXTheme.colors.iconPrimary
+                                tint = if (shuffleEnabled) Color.White else MusicXTheme.colors.iconSecondary
                             )
                         }
 
@@ -401,7 +401,7 @@ fun NowPlayingScreen(
                                     else -> Icons.Rounded.Repeat
                                 },
                                 contentDescription = "Repeat",
-                                tint = if (repeatMode != Player.REPEAT_MODE_OFF) MusicXTheme.colors.primaryAccent else MusicXTheme.colors.iconPrimary
+                                tint = if (repeatMode != Player.REPEAT_MODE_OFF) Color.White else MusicXTheme.colors.iconSecondary
                             )
                         }
                     }
