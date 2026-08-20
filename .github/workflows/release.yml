@@ -34,12 +34,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: apk
-          path: MusicX/app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/release/*.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: MusicX/app/build/outputs/apk/release/*.apk
+          files: app/build/outputs/apk/release/*.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
