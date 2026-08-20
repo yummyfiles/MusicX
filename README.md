@@ -58,7 +58,7 @@ No “Start Free Trial” button stalking you 😭
 
 ---
 
-> **📖 [Project Hub](https://yummyfiles.vercel.app/projects/musicx)** — Documentation, wiki, guides, and everything you need to know about MusicX.
+> ** [Project Hub](https://yummyfiles.vercel.app/projects/musicx)** — Documentation, wiki, guides, and everything you need to know about MusicX.
 
 ---
 
