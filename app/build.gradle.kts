@@ -60,24 +60,6 @@ android {
     }
 }
 
-tasks.register<Exec>("autoRelease") {
-    group = "publishing"
-    description = "Automatically tags and pushes the release to GitHub."
-    workingDir = rootProject.projectDir
-    commandLine = if (org.apache.tools.ant.taskdefs.condition.Os.isFamily(org.apache.tools.ant.taskdefs.condition.Os.FAMILY_WINDOWS)) {
-        listOf("python", "auto_release.py")
-    } else {
-        listOf("python3", "auto_release.py")
-    }
-}
-
-// Safer way to hook into the release build
-tasks.configureEach {
-    if (name == "assembleRelease") {
-        finalizedBy("autoRelease")
-    }
-}
-
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.accompanist.permissions)
