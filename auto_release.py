@@ -1,7 +1,7 @@
 import os
 import re
 import subprocess
-import shutil
+import sys
 
 def get_version():
     gradle_path = "app/build.gradle.kts"
@@ -15,33 +15,47 @@ def get_version():
     return None
 
 def main():
+    print("--- MusicX Auto-Release System ---")
     version = get_version()
     if not version:
         print("Error: Could not find versionName in build.gradle.kts")
-        return
+        sys.exit(1)
 
     tag = f"v{version}"
-    apk_path = "app/build/outputs/apk/release/app-release.apk"
+    print(f"Detected app version: {version}")
 
-    if not os.path.exists(apk_path):
-        print(f"Error: APK not found at {apk_path}. Did you build the release?")
-        return
+    try:
+        # Update remote tags list
+        subprocess.run(["git", "fetch", "--tags"], check=True, capture_output=True)
 
-    print(f"Detected version: {version}")
+        # Check if tag exists anywhere (local or remote)
+        existing_tags = subprocess.check_output(["git", "tag"]).decode().split()
+        if tag in existing_tags:
+            print(f"Release {tag} already exists on GitHub. Skipping automation.")
+            return
 
-    # Check if tag exists locally
-    tags = subprocess.check_output(["git", "tag"]).decode().split()
-    if tag in tags:
-        print(f"Tag {tag} already exists. Skipping.")
-    else:
-        print(f"Creating tag {tag}...")
-        try:
-            subprocess.run(["git", "tag", tag], check=True)
-            print(f"Pushing tag {tag} to origin...")
-            subprocess.run(["git", "push", "origin", tag], check=True)
-            print("Successfully pushed tag. GitHub Actions will handle the release.")
-        except subprocess.CalledProcessError as e:
-            print(f"Error running git command: {e}")
+        print(f"Release {tag} not found. Preparing automatic publication...")
+
+        # Ensure changes are committed (optional, but safer)
+        status = subprocess.check_output(["git", "status", "--porcelain"]).decode()
+        if status:
+            print("Warning: You have uncommitted changes. The release tag will point to the last commit.")
+
+        # Create and push tag
+        print(f"Creating Git tag: {tag}")
+        subprocess.run(["git", "tag", tag], check=True)
+
+        print(f"Pushing to GitHub: {tag}")
+        subprocess.run(["git", "push", "origin", tag], check=True)
+
+        print(f"SUCCESS: GitHub Release for {tag} has been triggered!")
+        print("The APK will appear on your GitHub Releases page in a few minutes.")
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error during Git automation: {e}")
+        # Don't exit with error to avoid failing the whole Gradle build
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 if __name__ == "__main__":
     main()
