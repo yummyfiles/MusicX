@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./MusicX/banner.svg">
-  <img src="./MusicX/banner.svg" alt="MusicX" width="100%" height="100%" />
+  <source media="(prefers-color-scheme: dark)" srcset="./MusicX/MusicX_Banner.png">
+  <img src="./MusicX/MusicX_Banner.png" alt="MusicX" width="100%" height="100%" />
 </picture>
 
 <p align="center">
