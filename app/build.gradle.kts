@@ -19,7 +19,7 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = rootProject.file("release.jks")
+            val keystoreFile = rootProject.file("keystore/release.jks")
             if (keystoreFile.exists()) {
                 storeFile = keystoreFile
                 storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "musicx123"
@@ -71,8 +71,11 @@ tasks.register<Exec>("autoRelease") {
     }
 }
 
-tasks.named("assembleRelease") {
-    finalizedBy("autoRelease")
+// Safer way to hook into the release build
+tasks.configureEach {
+    if (name == "assembleRelease") {
+        finalizedBy("autoRelease")
+    }
 }
 
 dependencies {
