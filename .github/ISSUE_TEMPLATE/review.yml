@@ -1,0 +1,48 @@
+name: MusicX Review
+description: Drop a rating + feedback for MusicX
+labels: ["review"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # MusicX Review
+        ---
+        <svg width="160" height="28" viewBox="0 0 160 28" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#ffffff" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+          <path fill="#ffffff" transform="translate(28,0)" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+          <path fill="#ffffff" transform="translate(56,0)" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+          <path fill="#ffffff" transform="translate(84,0)" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+          <path fill="#ffffff" transform="translate(112,0)" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+        </svg>
+
+        quick review MusicX
+
+  - type: dropdown
+    id: rating
+    attributes:
+      label: "rating"
+      options:
+        - "★☆☆☆☆"
+        - "★★☆☆☆"
+        - "★★★☆☆"
+        - "★★★★☆"
+        - "★★★★★"
+    validations:
+      required: true
+
+  - type: input
+    id: title
+    attributes:
+      label: "title"
+      placeholder: "what  do you think about MusicX"
+    validations:
+      required: true
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: "feedback"
+      placeholder: "say what’s good / bad / what’s broken"
+    validations:
+      required: true

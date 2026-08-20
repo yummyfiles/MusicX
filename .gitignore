@@ -1,0 +1,60 @@
+# IDE
+.idea/
+*.iml
+.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+*.ipr
+*.iws
+
+# Gradle
+.gradle/
+build/
+app/build/
+gradle-app.setting
+!gradle-wrapper.jar
+.navigation/
+
+# Kotlin
+.kotlin/
+kotlin-daemon-*.log
+
+# Local configuration
+local.properties
+Github Token
+GithubToken
+
+# Signing
+keystore/
+*.jks
+*.keystore
+!debug.keystore
+
+# External / Temp
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+releases/
+.artifacts/
+temp_assets/
+restore_temp/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+requirements.txt
+splash_animation.py
+all_releases*.json
+missing_releases.json
+standardized_releases.json
+temp_v1513_body.md
+clean_body.md
+
+# Application specific
+media/
+python
+MusicX/

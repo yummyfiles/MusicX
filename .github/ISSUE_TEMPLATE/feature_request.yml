@@ -1,0 +1,45 @@
+name: MusicX Feature Request
+description: suggest something you want added to MusicX
+title: "[Feature]"
+labels: ["enhancement"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # MusicX Feature Request
+        got an idea? drop it here
+
+        if it makes sense or is actually useful, I’ll probably add it
+
+  - type: input
+    id: title
+    attributes:
+      label: "feature request"
+      placeholder: "what should MusicX do?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "what problem does this solve"
+      placeholder: "why do you want this?"
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "how it should work"
+      placeholder: "describe how you imagine it working"
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: "extra thoughts"
+      placeholder: "anything else"
+    validations:
+      required: false

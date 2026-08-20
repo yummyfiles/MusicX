@@ -1,0 +1,61 @@
+name: MusicX Bug Report
+description: something in MusicX is broken
+title: "[Bug]"
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # MusicX Bug Report
+        thanks for reporting this, it actually helps fix stuff
+
+        just fill this in so I can reproduce it
+
+  - type: input
+    id: title
+    attributes:
+      label: "what broke"
+      placeholder: "what’s the issue"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "how to reproduce"
+      placeholder: |
+        1. open MusicX
+        2. go to ...
+        3. tap ...
+        4. it breaks
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "what should happen"
+      placeholder: "expected behavior"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "what actually happens"
+      placeholder: "what it actually does instead"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "how bad is it"
+      options:
+        - "low"
+        - "medium"
+        - "high"
+        - "critical"
+    validations:
+      required: true
