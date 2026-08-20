@@ -19,12 +19,12 @@ android {
 
     signingConfigs {
         create("release") {
-            val ks = file("../keystore/release.jks")
-            if (ks.exists()) {
-                keyAlias = "musicx"
-                keyPassword = "musicx123"
-                storeFile = ks
-                storePassword = "musicx123"
+            val keystoreFile = rootProject.file("release.jks")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "musicx123"
+                keyAlias = System.getenv("KEY_ALIAS") ?: "musicx"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: "musicx123"
             }
         }
     }
