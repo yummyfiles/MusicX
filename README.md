@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./MusicX/MusicX_Banner.png">
-  <img src="./MusicX/MusicX_Banner.png" alt="MusicX" width="100%" height="100%" />
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/MusicX_Banner.png">
+  <img src="./assets/MusicX_Banner.png" alt="MusicX" width="100%" height="100%" />
 </picture>
 
 <p align="center">
@@ -108,7 +108,7 @@ Import your songs, organize your library, make playlists, and listen offline wit
 <div align="center">
 
 <p align="center">
-  <img src="./MusicX/visualizer.svg" alt="MusicX Visualizer" width="100%">
+  <img src="./assets/visualizer.svg" alt="MusicX Visualizer" width="100%">
 </p>
 
 </div>

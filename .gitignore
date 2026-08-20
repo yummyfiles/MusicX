@@ -57,5 +57,4 @@ clean_body.md
 # Application specific
 media/
 python
-MusicX/
 auto_release.py
