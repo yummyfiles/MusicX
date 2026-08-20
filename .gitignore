@@ -1,12 +1,12 @@
 # IDE
 .idea/
 *.iml
-.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
 *.ipr
 *.iws
 
@@ -33,27 +33,16 @@ keystore/
 *.keystore
 !debug.keystore
 
-# External / Temp
+# System / Temp
 .DS_Store
 captures/
 .externalNativeBuild/
 .cxx/
-releases/
-.artifacts/
-temp_assets/
-restore_temp/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-requirements.txt
-splash_animation.py
-all_releases*.json
-missing_releases.json
-standardized_releases.json
-temp_v1513_body.md
-clean_body.md
 
-# Application specific
-media/
-python
+# Automation / Context
+devcontext.md
+release.py
