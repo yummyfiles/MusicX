@@ -1,5 +1,8 @@
 package com.yummyfiles.musicx.ui.songs
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.IntentSenderRequest
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -47,6 +50,23 @@ fun SongsScreen(
     val isSelectionMode by viewModel.isSelectionMode.collectAsState()
     val selectedUris by viewModel.selectedSongUris.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
+    val pendingDeleteIntent by viewModel.pendingDeleteIntent.collectAsState()
+
+    val deleteLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            viewModel.onDeletionConfirmed()
+        } else {
+            viewModel.onDeletionCancelled()
+        }
+    }
+
+    LaunchedEffect(pendingDeleteIntent) {
+        pendingDeleteIntent?.let {
+            deleteLauncher.launch(IntentSenderRequest.Builder(it).build())
+        }
+    }
     
     // Track current playing song for UI feedback
     var currentMediaId by remember { mutableStateOf<String?>(null) }

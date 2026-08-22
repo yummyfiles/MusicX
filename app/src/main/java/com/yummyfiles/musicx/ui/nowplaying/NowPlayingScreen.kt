@@ -67,9 +67,12 @@ fun NowPlayingScreen(
     var albumArtUri by remember { mutableStateOf(mediaController?.currentMediaItem?.mediaMetadata?.artworkUri) }
     var repeatMode by remember { mutableIntStateOf(mediaController?.repeatMode ?: Player.REPEAT_MODE_OFF) }
     var shuffleEnabled by remember { mutableStateOf(mediaController?.shuffleModeEnabled ?: false) }
-    var isFavorite by remember { mutableStateOf(false) }
 
     val currentMediaId = mediaController?.currentMediaItem?.mediaId
+    val favoriteIds by viewModel.favoriteIds.collectAsState()
+    val isFavorite = remember(currentMediaId, favoriteIds) {
+        currentMediaId?.toLongOrNull()?.let { favoriteIds.contains(it) } ?: false
+    }
     val songsById = remember(songs) {
         songs.associateBy { it.id.toString() }
     }
@@ -232,80 +235,87 @@ fun NowPlayingScreen(
                 Crossfade(
                     targetState = showLyrics,
                     animationSpec = tween(350),
-                    label = "LyricsCrossfade"
+                    label = "LyricsCrossfade",
+                    modifier = Modifier.fillMaxSize()
                 ) { showingLyrics ->
-                    if (showingLyrics) {
-                        SyncedLyricsView(
-                            lines = syncedLyrics,
-                            plainLyrics = lyricsText,
-                            activeIndex = activeLyricsIndex.value,
-                            onLineClick = { time -> mediaController?.seekTo(time) },
-                            enableSync = generalSettings.syncLyrics,
-                            biggerText = generalSettings.biggerLyrics,
-                            centerLyrics = generalSettings.centerLyrics
-                        )
-                    } else {
-                        val pulseAlpha by animateFloatAsState(
-                            targetValue = if (isPlaying) 0.12f else 0.05f,
-                            animationSpec = if (isPlaying) infiniteRepeatable(
-                                animation = tween(3000, easing = FastOutSlowInEasing),
-                                repeatMode = RepeatMode.Reverse
-                            ) else tween(500),
-                            label = "AlbumGlow"
-                        )
-                        val pulseScale by animateFloatAsState(
-                            targetValue = if (isPlaying) 1.05f else 1f,
-                            animationSpec = if (isPlaying) infiniteRepeatable(
-                                animation = tween(3000, easing = FastOutSlowInEasing),
-                                repeatMode = RepeatMode.Reverse
-                            ) else tween(500),
-                            label = "AlbumGlowScale"
-                        )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (showingLyrics) {
+                            SyncedLyricsView(
+                                lines = syncedLyrics,
+                                plainLyrics = lyricsText,
+                                activeIndex = activeLyricsIndex.value,
+                                onLineClick = { time -> mediaController?.seekTo(time) },
+                                enableSync = generalSettings.syncLyrics,
+                                biggerText = generalSettings.biggerLyrics,
+                                centerLyrics = generalSettings.centerLyrics
+                            )
+                        } else {
+                            val pulseAlpha by animateFloatAsState(
+                                targetValue = if (isPlaying) 0.12f else 0.05f,
+                                animationSpec = if (isPlaying) infiniteRepeatable(
+                                    animation = tween(3000, easing = FastOutSlowInEasing),
+                                    repeatMode = RepeatMode.Reverse
+                                ) else tween(500),
+                                label = "AlbumGlow"
+                            )
+                            val pulseScale by animateFloatAsState(
+                                targetValue = if (isPlaying) 1.05f else 1f,
+                                animationSpec = if (isPlaying) infiniteRepeatable(
+                                    animation = tween(3000, easing = FastOutSlowInEasing),
+                                    repeatMode = RepeatMode.Reverse
+                                ) else tween(500),
+                                label = "AlbumGlowScale"
+                            )
 
-                        Box(
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxHeight(0.9f)
-                                .graphicsLayer {
-                                    scaleX = pulseScale
-                                    scaleY = pulseScale
-                                    alpha = pulseAlpha
-                                }
-                                .clip(CircleShape)
-                                .background(
-                                    Brush.radialGradient(
-                                        colors = listOf(MusicXTheme.colors.primaryAccent, Color.Transparent)
+                            Box(
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .fillMaxHeight(0.9f)
+                                    .graphicsLayer {
+                                        scaleX = pulseScale
+                                        scaleY = pulseScale
+                                        alpha = pulseAlpha
+                                    }
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(MusicXTheme.colors.primaryAccent, Color.Transparent)
+                                        )
                                     )
-                                )
-                        )
+                            )
 
-                        Box(
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .fillMaxHeight(0.9f)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(MusicXTheme.colors.albumPlaceholder)
-                                .border(
-                                    width = 4.dp,
-                                    color = MusicXTheme.colors.outline.copy(alpha = 0.4f),
-                                    shape = RoundedCornerShape(24.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (albumArtUri != null) {
-                                AsyncImage(
-                                    model = albumArtUri,
-                                    contentDescription = "Album Art",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Rounded.MusicNote,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(140.dp),
-                                    tint = MusicXTheme.colors.iconSecondary.copy(alpha = 0.5f)
-                                )
+                            Box(
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .fillMaxHeight(0.9f)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(MusicXTheme.colors.albumPlaceholder)
+                                    .border(
+                                        width = 4.dp,
+                                        color = MusicXTheme.colors.outline.copy(alpha = 0.4f),
+                                        shape = RoundedCornerShape(24.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val artToDisplay = song?.albumArtUri ?: albumArtUri
+                                if (artToDisplay != null) {
+                                    AsyncImage(
+                                        model = artToDisplay,
+                                        contentDescription = "Album Art",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Rounded.MusicNote,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(140.dp),
+                                        tint = MusicXTheme.colors.iconSecondary.copy(alpha = 0.5f)
+                                    )
+                                }
                             }
                         }
                     }
@@ -371,13 +381,17 @@ fun NowPlayingScreen(
                             Icon(
                                 Icons.Rounded.Shuffle,
                                 contentDescription = "Shuffle",
-                                tint = if (shuffleEnabled) Color.White else MusicXTheme.colors.iconSecondary
+                                tint = if (shuffleEnabled) Color.White else Color.Gray
                             )
                         }
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        IconButton(onClick = { isFavorite = !isFavorite }) {
+                        IconButton(onClick = {
+                            currentMediaId?.toLongOrNull()?.let { 
+                                viewModel.toggleFavorite(it, !isFavorite)
+                            }
+                        }) {
                             Icon(
                                 if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                                 contentDescription = "Favorite",
@@ -401,7 +415,7 @@ fun NowPlayingScreen(
                                     else -> Icons.Rounded.Repeat
                                 },
                                 contentDescription = "Repeat",
-                                tint = if (repeatMode != Player.REPEAT_MODE_OFF) Color.White else MusicXTheme.colors.iconSecondary
+                                tint = if (repeatMode != Player.REPEAT_MODE_OFF) Color.White else Color.Gray
                             )
                         }
                     }

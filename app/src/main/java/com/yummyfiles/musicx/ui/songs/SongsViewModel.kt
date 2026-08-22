@@ -7,8 +7,10 @@ import com.yummyfiles.musicx.model.Playlist
 import com.yummyfiles.musicx.model.Song
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
@@ -19,6 +21,9 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
     private val _isLoading = MutableStateFlow(value = false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _pendingDeleteIntent = MutableStateFlow<android.app.PendingIntent?>(null)
+    val pendingDeleteIntent: StateFlow<android.app.PendingIntent?> = _pendingDeleteIntent.asStateFlow()
+
     private val _selectedSongUris = MutableStateFlow<Set<String>>(emptySet())
     val selectedSongUris: StateFlow<Set<String>> = _selectedSongUris.asStateFlow()
 
@@ -27,6 +32,9 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
 
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
+
+    val favoriteIds: StateFlow<List<Long>> = repository.getFavoriteIds()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
@@ -57,16 +65,31 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                repository.deleteSongs(_selectedSongUris.value.toList())
-                _selectedSongUris.value = emptySet()
-                _isSelectionMode.value = false
-                loadSongs()
+                val pendingIntent = repository.deleteSongs(_selectedSongUris.value.toList())
+                if (pendingIntent != null) {
+                    _pendingDeleteIntent.value = pendingIntent
+                } else {
+                    _selectedSongUris.value = emptySet()
+                    _isSelectionMode.value = false
+                    loadSongs()
+                }
             } catch (e: Exception) {
                 Log.e("SongsViewModel", "Failed to delete songs", e)
             } finally {
                 _isLoading.value = false
             }
         }
+    }
+
+    fun onDeletionConfirmed() {
+        _pendingDeleteIntent.value = null
+        _selectedSongUris.value = emptySet()
+        _isSelectionMode.value = false
+        loadSongs()
+    }
+
+    fun onDeletionCancelled() {
+        _pendingDeleteIntent.value = null
     }
 
     fun loadSongs() {
@@ -103,7 +126,21 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
         }
     }
     
-    fun autoFetchLyrics(@Suppress("UNUSED_PARAMETER") song: Song) { /* No-op */ }
+    fun autoFetchLyrics(song: Song) {
+        viewModelScope.launch {
+            val lyrics = repository.autoFetchLyrics(song)
+            if (lyrics != null) {
+                repository.updateMetadata(song.mediaUri.toString(), song.title, song.artist, lyrics)
+                loadSongs()
+            }
+        }
+    }
+
+    fun toggleFavorite(songId: Long, isFavorite: Boolean) {
+        viewModelScope.launch {
+            repository.toggleFavorite(songId, isFavorite)
+        }
+    }
 
     fun createPlaylist(name: String) {
         viewModelScope.launch {

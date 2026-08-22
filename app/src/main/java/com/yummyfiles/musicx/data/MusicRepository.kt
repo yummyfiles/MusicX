@@ -10,13 +10,30 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
+import android.app.PendingIntent
+import android.os.Build
+import android.provider.MediaStore.createDeleteRequest
+import android.app.RecoverableSecurityException
 
 @Suppress("UNUSED_PARAMETER", "RedundantSuspendModifier")
 class MusicRepository(private val context: Context) {
     private val database = MusicDatabase.getDatabase(context)
     private val playlistDao = database.playlistDao()
+    private val favoriteDao = database.favoriteDao()
+
+    private val json = Json { ignoreUnknownKeys = true }
+
+    @Serializable
+    private data class LrcLibResponse(
+        val plainLyrics: String? = null,
+        val syncedLyrics: String? = null
+    )
 
     suspend fun fetchLocalSongs(): List<Song> = withContext(Dispatchers.IO) {
         val songs = mutableListOf<Song>()
@@ -27,10 +44,13 @@ class MusicRepository(private val context: Context) {
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.ALBUM_ID
+            MediaStore.Audio.Media.ALBUM_ID,
+            MediaStore.Audio.Media.DATA
         )
 
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
+        val selection = "(${MediaStore.Audio.Media.IS_MUSIC} != 0) OR " +
+                "(${MediaStore.Audio.Media.DATA} LIKE '%.webm') OR " +
+                "(${MediaStore.Audio.Media.DATA} LIKE '%.mkv')"
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
 
         context.contentResolver.query(
@@ -134,16 +154,58 @@ class MusicRepository(private val context: Context) {
         android.util.Log.d("MusicRepository", "Update metadata for $uri: $title, $artist")
     }
 
-    suspend fun deleteSongs(uris: List<String>) = withContext(Dispatchers.IO) {
-        uris.forEach { uriString ->
-            try {
-                val uri = Uri.parse(uriString)
-                context.contentResolver.delete(uri, null, null)
-            } catch (e: Exception) {
-                android.util.Log.e("MusicRepository", "Failed to delete song: $uriString", e)
+    suspend fun deleteSongs(uris: List<String>): PendingIntent? = withContext(Dispatchers.IO) {
+        val uriList = uris.map { Uri.parse(it) }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return@withContext MediaStore.createDeleteRequest(context.contentResolver, uriList)
+        } else {
+            uriList.forEach { uri ->
+                try {
+                    context.contentResolver.delete(uri, null, null)
+                } catch (e: Exception) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && e is RecoverableSecurityException) {
+                        return@withContext e.userAction.actionIntent
+                    }
+                    android.util.Log.e("MusicRepository", "Failed to delete song: $uri", e)
+                }
             }
         }
+        null
     }
-    suspend fun autoFetchLyrics(song: Song): String? = null
+
+    fun getFavoriteIds(): Flow<List<Long>> = favoriteDao.getAllFavoriteIds()
+
+    suspend fun toggleFavorite(songId: Long, isFavorite: Boolean) = withContext(Dispatchers.IO) {
+        if (isFavorite) {
+            favoriteDao.insertFavorite(FavoriteEntity(songId))
+        } else {
+            favoriteDao.deleteFavorite(FavoriteEntity(songId))
+        }
+    }
+
+    suspend fun autoFetchLyrics(song: Song): String? = withContext(Dispatchers.IO) {
+        try {
+            val query = "artist_name=${URLEncoder.encode(song.artist, "UTF-8")}" +
+                    "&track_name=${URLEncoder.encode(song.title, "UTF-8")}" +
+                    "&duration=${song.duration / 1000}"
+            val url = URL("https://lrclib.net/api/get?$query")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+
+            if (connection.responseCode == 200) {
+                val responseText = connection.inputStream.bufferedReader().readText()
+                val response = json.decodeFromString<LrcLibResponse>(responseText)
+                response.syncedLyrics ?: response.plainLyrics
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MusicRepository", "Error fetching lyrics from LRCLIB", e)
+            null
+        }
+    }
     suspend fun syncAllLyrics() { /* No-op */ }
 }

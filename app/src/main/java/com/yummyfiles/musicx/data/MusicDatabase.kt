@@ -19,10 +19,23 @@ interface PlaylistDao {
     suspend fun deletePlaylist(playlist: PlaylistEntity)
 }
 
-@Database(entities = [PlaylistEntity::class], version = 1, exportSchema = false)
+@Dao
+interface FavoriteDao {
+    @Query("SELECT songId FROM favorites")
+    fun getAllFavoriteIds(): Flow<List<Long>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFavorite(favorite: FavoriteEntity)
+
+    @Delete
+    suspend fun deleteFavorite(favorite: FavoriteEntity)
+}
+
+@Database(entities = [PlaylistEntity::class, FavoriteEntity::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class MusicDatabase : RoomDatabase() {
     abstract fun playlistDao(): PlaylistDao
+    abstract fun favoriteDao(): FavoriteDao
 
     companion object {
         @Volatile
@@ -34,7 +47,9 @@ abstract class MusicDatabase : RoomDatabase() {
                     context.applicationContext,
                     MusicDatabase::class.java,
                     "music_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

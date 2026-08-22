@@ -51,13 +51,13 @@ fun PlaylistsScreen(
                             .padding(end = 16.dp)
                             .size(40.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(MusicXTheme.colors.primaryAccent.copy(alpha = 0.15f))
-                            .border(1.dp, MusicXTheme.colors.primaryAccent.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                            .background(MusicXTheme.colors.primaryText.copy(alpha = 0.1f))
+                            .border(1.dp, MusicXTheme.colors.primaryText.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Add, 
                             contentDescription = "New Playlist", 
-                            tint = MusicXTheme.colors.primaryAccent,
+                            tint = MusicXTheme.colors.primaryText,
                             modifier = Modifier.size(24.dp)
                         )
                     }
