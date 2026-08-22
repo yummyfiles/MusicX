@@ -89,7 +89,7 @@ fun MetadataEditor(
                 )
             )
 
-            Text("Lyrics (Offline)", color = MusicXTheme.colors.secondaryText, style = MaterialTheme.typography.labelMedium)
+            Text("Lyrics", color = MusicXTheme.colors.secondaryText, style = MaterialTheme.typography.labelMedium)
             TextField(
                 value = lyrics,
                 onValueChange = { lyrics = it },
