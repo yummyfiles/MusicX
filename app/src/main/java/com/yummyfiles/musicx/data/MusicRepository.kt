@@ -26,6 +26,7 @@ class MusicRepository(private val context: Context) {
     private val database = MusicDatabase.getDatabase(context)
     private val playlistDao = database.playlistDao()
     private val favoriteDao = database.favoriteDao()
+    private val lyricDao = database.lyricDao()
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -65,6 +66,7 @@ class MusicRepository(private val context: Context) {
             val artistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+            val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
@@ -72,6 +74,24 @@ class MusicRepository(private val context: Context) {
                 val artist = cursor.getString(artistColumn) ?: "Unknown"
                 val duration = cursor.getLong(durationColumn)
                 val albumId = cursor.getLong(albumIdColumn)
+                val path = cursor.getString(dataColumn)
+
+                // Try to load lyrics from database first
+                var lyrics = lyricDao.getLyricsForSong(id)
+
+                // If not in database, check for local .lrc file
+                if (lyrics == null && path != null) {
+                    try {
+                        val lrcFile = java.io.File(path.substringBeforeLast(".") + ".lrc")
+                        if (lrcFile.exists()) {
+                            lyrics = lrcFile.readText()
+                            // Cache it in database
+                            lyricDao.insertLyrics(LyricEntity(id, lyrics))
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("MusicRepository", "Failed to read local lrc for $path", e)
+                    }
+                }
 
                 val contentUri: Uri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -90,7 +110,9 @@ class MusicRepository(private val context: Context) {
                         artist = artist,
                         duration = duration,
                         mediaUri = contentUri,
-                        albumArtUri = albumArtUri
+                        albumArtUri = albumArtUri,
+                        lyrics = lyrics,
+                        path = path
                     )
                 )
             }
@@ -152,6 +174,12 @@ class MusicRepository(private val context: Context) {
         // Metadata editing for local files often requires specific tag libraries (like JAudioTagger)
         // or updating MediaStore (limited support). For now, we'll log it.
         android.util.Log.d("MusicRepository", "Update metadata for $uri: $title, $artist")
+        if (lyrics != null) {
+            val songId = uri.substringAfterLast("/").toLongOrNull()
+            if (songId != null) {
+                lyricDao.insertLyrics(LyricEntity(songId, lyrics))
+            }
+        }
     }
 
     suspend fun deleteSongs(uris: List<String>): PendingIntent? = withContext(Dispatchers.IO) {
@@ -186,8 +214,11 @@ class MusicRepository(private val context: Context) {
 
     suspend fun autoFetchLyrics(song: Song): String? = withContext(Dispatchers.IO) {
         try {
-            val query = "artist_name=${URLEncoder.encode(song.artist, "UTF-8")}" +
-                    "&track_name=${URLEncoder.encode(song.title, "UTF-8")}" +
+            val cleanArtist = cleanForQuery(song.artist)
+            val cleanTitle = cleanForQuery(song.title)
+            
+            val query = "artist_name=${URLEncoder.encode(cleanArtist, "UTF-8")}" +
+                    "&track_name=${URLEncoder.encode(cleanTitle, "UTF-8")}" +
                     "&duration=${song.duration / 1000}"
             val url = URL("https://lrclib.net/api/get?$query")
             val connection = url.openConnection() as HttpURLConnection
@@ -206,6 +237,13 @@ class MusicRepository(private val context: Context) {
             android.util.Log.e("MusicRepository", "Error fetching lyrics from LRCLIB", e)
             null
         }
+    }
+
+    private fun cleanForQuery(text: String): String {
+        return text.replace(Regex("(?i)\\(official[^)]*\\)|\\[official[^]]*]"), "")
+            .replace(Regex("(?i)ft\\.|feat\\.|featuring.*"), "")
+            .filter { it !in setOf('|', '\\', '(', ')', '"', '[', ']') }
+            .trim()
     }
     suspend fun syncAllLyrics() { /* No-op */ }
 }

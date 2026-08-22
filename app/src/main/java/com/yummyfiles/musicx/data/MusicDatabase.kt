@@ -31,11 +31,21 @@ interface FavoriteDao {
     suspend fun deleteFavorite(favorite: FavoriteEntity)
 }
 
-@Database(entities = [PlaylistEntity::class, FavoriteEntity::class], version = 2, exportSchema = false)
+@Dao
+interface LyricDao {
+    @Query("SELECT lyrics FROM lyrics WHERE songId = :songId")
+    suspend fun getLyricsForSong(songId: Long): String?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLyrics(lyric: LyricEntity)
+}
+
+@Database(entities = [PlaylistEntity::class, FavoriteEntity::class, LyricEntity::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class MusicDatabase : RoomDatabase() {
     abstract fun playlistDao(): PlaylistDao
     abstract fun favoriteDao(): FavoriteDao
+    abstract fun lyricDao(): LyricDao
 
     companion object {
         @Volatile

@@ -12,4 +12,5 @@ data class Song(
     val mediaUri: Uri,
     val albumArtUri: Uri? = null,
     val lyrics: String? = null,
+    val path: String? = null,
 )
