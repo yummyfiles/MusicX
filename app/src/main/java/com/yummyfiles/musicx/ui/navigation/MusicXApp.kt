@@ -68,7 +68,7 @@ fun MusicXApp(
                             .setTitle(s.title)
                             .setArtist(s.artist)
                             .setArtworkUri(s.albumArtUri)
-                            .build()
+                            .build(),
                     )
                     .build()
             }
@@ -83,9 +83,9 @@ fun MusicXApp(
     Scaffold(
         bottomBar = {
             AnimatedVisibility(
-                visible = (isMobile && currentDestination !is Destination.NowPlaying),
+                visible = isMobile && (currentDestination !is Destination.NowPlaying),
                 enter = slideInVertically { it },
-                exit = slideOutVertically(targetOffsetY = { it })
+                exit = slideOutVertically { it }
             ) {
                 Column(modifier = Modifier.background(MusicXTheme.colors.bottomBar)) {
                     MiniPlayer(
@@ -95,7 +95,7 @@ fun MusicXApp(
                     NavigationBar(
                         containerColor = MusicXTheme.colors.bottomBar,
                         tonalElevation = 0.dp,
-                        windowInsets = WindowInsets.navigationBars // Ensure labels are above system nav bar
+                        windowInsets = WindowInsets.navigationBars // keep the labels safe from the nav bar bruh
                     ) {
                         NavigationItem(
                             selected = currentDestination is Destination.Songs,
@@ -230,7 +230,7 @@ fun RowScope.NavigationItem(
     NavigationBarItem(
         selected = selected,
         onClick = onClick,
-        alwaysShowLabel = true, // Force labels to be visible
+        alwaysShowLabel = true, // need to see the labels lol
         icon = { Icon(icon, contentDescription = label) },
         label = { 
             Text(
@@ -238,7 +238,7 @@ fun RowScope.NavigationItem(
                 maxLines = 1,
                 overflow = TextOverflow.Visible,
                 softWrap = false,
-                fontSize = 10.sp, // Slightly smaller to ensure fit
+                fontSize = 10.sp, // smol text to fit the vibe fr
                 color = if (selected) MusicXTheme.colors.navActive else MusicXTheme.colors.navInactive
             ) 
         },

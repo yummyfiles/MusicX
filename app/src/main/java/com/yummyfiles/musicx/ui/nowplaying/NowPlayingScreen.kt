@@ -87,7 +87,7 @@ fun NowPlayingScreen(
     val hasSyncedLyrics = syncedLyrics.isNotEmpty()
     val showLyricsInPlayer = generalSettings.showLyricsInPlayer
 
-    // Compute activeIndex here so SyncedLyricsView only recomposes when line changes, not every 250ms
+    // checking which lyric line is vibing right now lol
     val activeLyricsIndex = remember {
         derivedStateOf {
             val predictionOffset = 150L
@@ -102,7 +102,7 @@ fun NowPlayingScreen(
     }
 
     LaunchedEffect(currentMediaId) {
-        if (song != null && lyricsText == null) {
+        if ((song != null) && (lyricsText == null)) {
             viewModel.autoFetchLyrics(song)
         }
     }
@@ -121,7 +121,7 @@ fun NowPlayingScreen(
         }
     }
 
-    // Smooth progress polling during playback
+    // tracking the time fr
     LaunchedEffect(isPlaying) {
         if (isPlaying && mediaController != null) {
             while (true) {
@@ -150,7 +150,7 @@ fun NowPlayingScreen(
             override fun onPositionDiscontinuity(
                 oldPosition: Player.PositionInfo,
                 newPosition: Player.PositionInfo,
-                reason: Int
+                reason: Int,
             ) {
                 currentPosition = newPosition.positionMs.coerceAtLeast(0L)
                 duration = (mediaController?.duration ?: 0L).coerceAtLeast(0L)
@@ -225,7 +225,7 @@ fun NowPlayingScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Album Art Area / Lyrics Area with crossfade transition
+            // switching between art and lyrics is a whole mood
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -322,7 +322,7 @@ fun NowPlayingScreen(
                 }
             }
 
-            // Information & Controls Section
+            // the main controls area tbh
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -356,7 +356,7 @@ fun NowPlayingScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Progress Bar (isolated in child composable to limit recomposition scope)
+                // seek bar doing its thing lol
                 SeekBarSection(
                     progressFraction = progressFraction,
                     formattedPosition = formattedPosition,
@@ -367,16 +367,18 @@ fun NowPlayingScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Controls
+                // button vibes
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = {
-                            mediaController?.shuffleModeEnabled = !shuffleEnabled
-                        }) {
+                        IconButton(
+                            onClick = {
+                                mediaController?.shuffleModeEnabled = !shuffleEnabled
+                            },
+                        ) {
                             Icon(
                                 Icons.Rounded.Shuffle,
                                 contentDescription = "Shuffle",
@@ -494,13 +496,13 @@ fun SyncedLyricsView(
     val density = LocalDensity.current
     var listHeightPx by remember { mutableIntStateOf(0) }
 
-    // Scroll to center the active line in the container
+    // keep the active lyric in the center fr
     LaunchedEffect(activeIndex, lines) {
         if (lines.isNotEmpty() && enableSync) {
-            // Wait for LazyColumn to finish its first layout
+            // wait for the list to finish vibing
             snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }
                 .first { it }
-            // Now layout is done — listHeightPx is set and items are measured
+            // okay we ready to scroll now lol
             val lineHeightPx = with(density) {
                 val fontSize = if (biggerText) 22.sp else 18.sp
                 fontSize.toPx() * 1.5f + 24.dp.toPx()
@@ -669,7 +671,7 @@ private fun SeekBarSection(
     duration: Long,
     onSeek: (Long) -> Unit
 ) {
-    var isDragging by remember { mutableStateOf(false) }
+    var isDragging by remember { mutableStateOf(value = false) }
     var dragPosition by remember { mutableFloatStateOf(0f) }
 
     Column(modifier = Modifier.fillMaxWidth()) {

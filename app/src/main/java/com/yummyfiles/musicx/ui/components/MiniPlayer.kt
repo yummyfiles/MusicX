@@ -42,10 +42,10 @@ fun MiniPlayer(
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
         animationSpec = tween(durationMillis = 100, easing = LinearEasing),
-        label = "SmoothProgress"
+        label = "SmoothProgress",
     )
     
-    // Smooth progress polling while playing
+    // tracking the progress bar is a vibe lol
     LaunchedEffect(isPlaying) {
         if (isPlaying && (mediaController != null)) {
             while (true) {
@@ -56,7 +56,7 @@ fun MiniPlayer(
         }
     }
 
-    // Initial state sync
+    // getting things ready fr
     LaunchedEffect(mediaController, mediaController?.currentMediaItem) {
         if (mediaController != null) {
             isPlaying = mediaController.isPlaying
@@ -189,7 +189,7 @@ fun MiniPlayer(
                 }
             }
             
-            // Minimal progress bar at the bottom
+            // tiny progress bar down here tbh
             LinearProgressIndicator(
                 progress = { animatedProgress },
                 modifier = Modifier

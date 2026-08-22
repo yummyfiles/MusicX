@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.yummyfiles.musicx.ui.theme.MusicXTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +35,7 @@ fun AboutScreen(onBack: () -> Unit) {
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
-                            tint = MusicXTheme.colors.iconPrimary
+                            tint = MusicXTheme.colors.iconPrimary,
                         )
                     }
                 },
@@ -57,7 +56,7 @@ fun AboutScreen(onBack: () -> Unit) {
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // App Logo
+            // checking out the logo vibe lol
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -109,8 +108,9 @@ fun AboutScreen(onBack: () -> Unit) {
                 AboutLink(
                     icon = Icons.Rounded.Code,
                     label = "Project",
-                    onClick = { uriHandler.openUri("https://github.com/MusicX") }
-                )
+                ) {
+                    uriHandler.openUri("https://github.com/MusicX")
+                }
                 Spacer(modifier = Modifier.width(24.dp))
                 AboutLink(
                     icon = Icons.Rounded.Person,

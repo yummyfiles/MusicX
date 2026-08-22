@@ -29,6 +29,9 @@ interface FavoriteDao {
 
     @Delete
     suspend fun deleteFavorite(favorite: FavoriteEntity)
+
+    @Query("DELETE FROM favorites WHERE songId = :songId")
+    suspend fun deleteFavoriteById(songId: Long)
 }
 
 @Dao
@@ -38,6 +41,9 @@ interface LyricDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLyrics(lyric: LyricEntity)
+
+    @Query("DELETE FROM lyrics WHERE songId = :songId")
+    suspend fun deleteLyricsById(songId: Long)
 }
 
 @Database(entities = [PlaylistEntity::class, FavoriteEntity::class, LyricEntity::class], version = 3, exportSchema = false)

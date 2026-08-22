@@ -16,9 +16,12 @@ class MusicController(context: Context) {
     init {
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
-        controllerFuture?.addListener({
-            mediaController.value = controllerFuture?.get()
-        }, MoreExecutors.directExecutor())
+        controllerFuture?.addListener(
+            {
+                mediaController.value = controllerFuture?.get()
+            },
+            MoreExecutors.directExecutor(),
+        )
     }
 
     fun release() {

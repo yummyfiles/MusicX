@@ -55,7 +55,7 @@ fun PlaylistDetailScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MusicXTheme.colors.topBar,
-                    titleContentColor = MusicXTheme.colors.primaryText
+                    titleContentColor = MusicXTheme.colors.primaryText,
                 )
             )
         },

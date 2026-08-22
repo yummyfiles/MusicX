@@ -68,7 +68,7 @@ fun SongsScreen(
         }
     }
     
-    // Track current playing song for UI feedback
+    // keeping tabs on what's playing fr
     var currentMediaId by remember { mutableStateOf<String?>(null) }
     
     LaunchedEffect(mediaController, mediaController?.currentMediaItem) {
@@ -101,8 +101,16 @@ fun SongsScreen(
                 },
                 navigationIcon = {
                     if (isSelectionMode) {
-                        IconButton(onClick = { viewModel.toggleSelectionMode() }) {
-                            Icon(Icons.Rounded.Close, contentDescription = "Cancel", tint = MusicXTheme.colors.iconPrimary)
+                        IconButton(
+                            onClick = {
+                                viewModel.toggleSelectionMode()
+                            },
+                        ) {
+                            Icon(
+                                Icons.Rounded.Close,
+                                contentDescription = "Cancel",
+                                tint = MusicXTheme.colors.iconPrimary,
+                            )
                         }
                     }
                 },

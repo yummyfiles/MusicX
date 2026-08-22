@@ -24,7 +24,7 @@ fun ImportScreen(viewModel: SongsViewModel) {
     val context = LocalContext.current
     
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetMultipleContents()
+        contract = ActivityResultContracts.GetMultipleContents(),
     ) { uris ->
         if (uris.isNotEmpty()) {
             viewModel.importSongs(uris)

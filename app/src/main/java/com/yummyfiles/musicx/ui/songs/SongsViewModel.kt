@@ -27,6 +27,8 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
     private val _selectedSongUris = MutableStateFlow<Set<String>>(emptySet())
     val selectedSongUris: StateFlow<Set<String>> = _selectedSongUris.asStateFlow()
 
+    private var songIdsBeingDeleted: List<Long> = emptyList()
+
     private val _isSelectionMode = MutableStateFlow(value = false)
     val isSelectionMode: StateFlow<Boolean> = _isSelectionMode.asStateFlow()
 
@@ -65,10 +67,16 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val pendingIntent = repository.deleteSongs(_selectedSongUris.value.toList())
+                val uris = _selectedSongUris.value.toList()
+                songIdsBeingDeleted = _songs.value
+                    .filter { uris.contains(it.mediaUri.toString()) }
+                    .map { it.id }
+
+                val pendingIntent = repository.deleteSongs(uris)
                 if (pendingIntent != null) {
                     _pendingDeleteIntent.value = pendingIntent
                 } else {
+                    repository.clearSongMetadata(songIdsBeingDeleted)
                     _selectedSongUris.value = emptySet()
                     _isSelectionMode.value = false
                     loadSongs()
@@ -82,10 +90,13 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
     }
 
     fun onDeletionConfirmed() {
-        _pendingDeleteIntent.value = null
-        _selectedSongUris.value = emptySet()
-        _isSelectionMode.value = false
-        loadSongs()
+        viewModelScope.launch {
+            repository.clearSongMetadata(songIdsBeingDeleted)
+            _pendingDeleteIntent.value = null
+            _selectedSongUris.value = emptySet()
+            _isSelectionMode.value = false
+            loadSongs()
+        }
     }
 
     fun onDeletionCancelled() {

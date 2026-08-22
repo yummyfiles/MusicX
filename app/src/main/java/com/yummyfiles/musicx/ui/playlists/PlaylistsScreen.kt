@@ -51,8 +51,11 @@ fun PlaylistsScreen(
                             .padding(end = 16.dp)
                             .size(40.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(MusicXTheme.colors.primaryText.copy(alpha = 0.1f))
-                            .border(1.dp, MusicXTheme.colors.primaryText.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                            .border(
+                                width = 1.dp,
+                                color = MusicXTheme.colors.primaryText.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(10.dp),
+                            )
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Add, 
@@ -104,7 +107,7 @@ fun PlaylistsScreen(
     if (showCreateDialog) {
         PlaylistDialog(
             title = "New Playlist",
-            onDismiss = { showCreateDialog = false }
+            onDismiss = { showCreateDialog = false },
         ) { name ->
             viewModel.createPlaylist(name)
             showCreateDialog = false
