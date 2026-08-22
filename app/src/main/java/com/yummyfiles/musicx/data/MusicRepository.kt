@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.net.HttpURLConnection
 import java.net.URL
@@ -20,6 +19,7 @@ import android.app.PendingIntent
 import android.os.Build
 import android.provider.MediaStore.createDeleteRequest
 import android.app.RecoverableSecurityException
+import androidx.core.net.toUri
 
 @Suppress("UNUSED_PARAMETER", "RedundantSuspendModifier")
 class MusicRepository(private val context: Context) {
@@ -99,7 +99,7 @@ class MusicRepository(private val context: Context) {
                 )
                 
                 val albumArtUri = ContentUris.withAppendedId(
-                    Uri.parse("content://media/external/audio/albumart"),
+                    "content://media/external/audio/albumart".toUri(),
                     albumId
                 )
 
@@ -183,10 +183,10 @@ class MusicRepository(private val context: Context) {
     }
 
     suspend fun deleteSongs(uris: List<String>): PendingIntent? = withContext(Dispatchers.IO) {
-        val uriList = uris.map { Uri.parse(it) }
+        val uriList = uris.map { it.toUri() }
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            return@withContext MediaStore.createDeleteRequest(context.contentResolver, uriList)
+            return@withContext createDeleteRequest(context.contentResolver, uriList)
         } else {
             uriList.forEach { uri ->
                 try {
