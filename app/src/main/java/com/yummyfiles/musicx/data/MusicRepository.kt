@@ -33,7 +33,7 @@ class MusicRepository(private val context: Context) {
     @Serializable
     private data class LrcLibResponse(
         val plainLyrics: String? = null,
-        val syncedLyrics: String? = null
+        val syncedLyrics: String? = null,
     )
 
     suspend fun fetchLocalSongs(): List<Song> = withContext(Dispatchers.IO) {
@@ -80,7 +80,7 @@ class MusicRepository(private val context: Context) {
                 var lyrics = lyricDao.getLyricsForSong(id)
 
                 // If not in database, check for local .lrc file
-                if (lyrics == null && path != null) {
+                if (lyrics == null && (path != null)) {
                     try {
                         val lrcFile = java.io.File(path.substringBeforeLast(".") + ".lrc")
                         if (lrcFile.exists()) {
@@ -175,8 +175,7 @@ class MusicRepository(private val context: Context) {
         // or updating MediaStore (limited support). For now, we'll log it.
         android.util.Log.d("MusicRepository", "Update metadata for $uri: $title, $artist")
         if (lyrics != null) {
-            val songId = uri.substringAfterLast("/").toLongOrNull()
-            if (songId != null) {
+            uri.substringAfterLast("/").toLongOrNull()?.let { songId ->
                 lyricDao.insertLyrics(LyricEntity(songId, lyrics))
             }
         }

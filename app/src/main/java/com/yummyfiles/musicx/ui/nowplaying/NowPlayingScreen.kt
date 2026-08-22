@@ -56,7 +56,7 @@ fun NowPlayingScreen(
     mediaController: MediaController?,
     songs: List<com.yummyfiles.musicx.model.Song>,
     generalSettings: GeneralSettings = GeneralSettings(),
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     var isPlaying by remember { mutableStateOf(mediaController?.isPlaying ?: false) }
@@ -91,11 +91,11 @@ fun NowPlayingScreen(
     val activeLyricsIndex = remember {
         derivedStateOf {
             val predictionOffset = 150L
-            syncedLyrics.indexOfLast { it.time <= currentPosition + predictionOffset }.coerceAtLeast(0)
+            syncedLyrics.indexOfLast { it.time <= (currentPosition + predictionOffset) }.coerceAtLeast(0)
         }
     }
 
-    var showLyrics by remember { mutableStateOf(false) }
+    var showLyrics by remember { mutableStateOf(value = false) }
 
     LaunchedEffect(currentMediaId, showLyricsInPlayer) {
         showLyrics = hasSyncedLyrics && showLyricsInPlayer
@@ -362,9 +362,8 @@ fun NowPlayingScreen(
                     formattedPosition = formattedPosition,
                     formattedDuration = formattedDuration,
                     mediaController = mediaController,
-                    duration = duration,
-                    onSeek = { pos -> currentPosition = pos }
-                )
+                    duration = duration
+                ) { pos -> currentPosition = pos }
 
                 Spacer(modifier = Modifier.height(16.dp))
 

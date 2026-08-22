@@ -53,7 +53,7 @@ fun SongsScreen(
     val pendingDeleteIntent by viewModel.pendingDeleteIntent.collectAsState()
 
     val deleteLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
     ) { result ->
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             viewModel.onDeletionConfirmed()

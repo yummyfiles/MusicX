@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var musicController: MusicController
 
     private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
+        ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
         if (permissions.values.all { it }) {
             songsViewModel.loadSongs()
