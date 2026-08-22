@@ -96,7 +96,7 @@ fun SongsScreen(
                         text = if (isSelectionMode) "${selectedUris.size} Selected" else "Songs", 
                         fontSize = if (isSelectionMode) 24.sp else 32.sp, 
                         fontWeight = FontWeight.Bold,
-                        color = MusicXTheme.colors.primaryText
+                        color = MusicXTheme.colors.primaryText,
                     )
                 },
                 navigationIcon = {
@@ -129,10 +129,18 @@ fun SongsScreen(
                                     Icon(Icons.Rounded.Edit, contentDescription = "Edit Metadata", tint = MusicXTheme.colors.iconPrimary)
                                 }
                             }
-                            IconButton(onClick = { showPlaylistDialog = true }) {
+                            IconButton(
+                                onClick = {
+                                    showPlaylistDialog = true
+                                },
+                            ) {
                                 Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = "Add to Playlist", tint = MusicXTheme.colors.iconPrimary)
                             }
-                            IconButton(onClick = { viewModel.deleteSelectedSongs() }) {
+                            IconButton(
+                                onClick = {
+                                    viewModel.deleteSelectedSongs()
+                                },
+                            ) {
                                 Icon(Icons.Rounded.Delete, contentDescription = "Delete", tint = MusicXTheme.colors.iconPrimary)
                             }
                         }
@@ -372,14 +380,42 @@ fun PlaylistSelectionDialog(
                 Text("No playlists created yet.", color = MusicXTheme.colors.secondaryText)
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(playlists, key = { it.id }) { playlist ->
-                        TextButton(
+                        Surface(
                             onClick = { onPlaylistSelected(playlist) },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            color = MusicXTheme.colors.cardBackground,
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = 1.dp,
+                                color = MusicXTheme.colors.outline.copy(alpha = 0.15f)
+                            )
                         ) {
-                            Text(playlist.name, color = MusicXTheme.colors.primaryText)
+                            Row(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                                    contentDescription = null,
+                                    tint = MusicXTheme.colors.primaryAccent,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = playlist.name,
+                                    color = MusicXTheme.colors.primaryText,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
                 }
