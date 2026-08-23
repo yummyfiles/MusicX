@@ -26,7 +26,7 @@ import com.yummyfiles.musicx.ui.theme.MusicXTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
-    // bruh this app is literally built different fr fr fr fr lol
+    // bruh this app is literally built different fr fr fr lol
     Scaffold(
         topBar = {
             TopAppBar(
