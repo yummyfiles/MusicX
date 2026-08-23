@@ -59,7 +59,7 @@ class MusicRepository(private val context: Context) {
             projection,
             selection,
             null,
-            sortOrder
+            sortOrder,
         )?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
@@ -80,7 +80,7 @@ class MusicRepository(private val context: Context) {
                 var lyrics = lyricDao.getLyricsForSong(id)
 
                 // no db lyrics? checking the files then bruh
-                if (lyrics == null && (path != null)) {
+                if (lyrics == null && path != null) {
                     try {
                         val lrcFile = java.io.File(path.substringBeforeLast(".") + ".lrc")
                         if (lrcFile.exists()) {

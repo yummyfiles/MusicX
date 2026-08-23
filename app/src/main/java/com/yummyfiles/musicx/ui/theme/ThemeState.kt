@@ -169,7 +169,7 @@ fun ThemeState.toComposeColors() = MusicXColors(
     lyricsActive = Color(lyricsActive),
     lyricsInactive = Color(lyricsInactive),
     navActive = Color(navActive),
-    navInactive = Color(navInactive)
+    navInactive = Color(navInactive),
 )
 
 @Immutable

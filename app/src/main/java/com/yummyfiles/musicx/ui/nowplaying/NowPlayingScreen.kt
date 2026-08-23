@@ -123,7 +123,7 @@ fun NowPlayingScreen(
 
     // tracking the time fr
     LaunchedEffect(isPlaying) {
-        if (isPlaying && mediaController != null) {
+        if (isPlaying && (mediaController != null)) {
             while (true) {
                 delay(500.milliseconds)
                 currentPosition = mediaController.currentPosition.coerceAtLeast(0L)
@@ -193,7 +193,7 @@ fun NowPlayingScreen(
                     .background(MusicXTheme.colors.topBar)
                     .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Minimize", tint = MusicXTheme.colors.iconPrimary)
