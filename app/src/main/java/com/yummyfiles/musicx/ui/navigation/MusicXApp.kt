@@ -32,6 +32,7 @@ import com.yummyfiles.musicx.ui.nowplaying.NowPlayingScreen
 import androidx.media3.common.MediaItem
 import com.yummyfiles.musicx.ui.theme.MusicXTheme
 import com.yummyfiles.musicx.ui.metadata.MetadataEditor
+import com.yummyfiles.musicx.ui.splash.SplashScreen
 
 @Composable
 fun MusicXApp(
@@ -39,7 +40,7 @@ fun MusicXApp(
     settingsViewModel: SettingsViewModel,
     musicController: MusicController,
 ) {
-    val backStack = rememberNavBackStack(Destination.Songs as NavKey)
+    val backStack = rememberNavBackStack(Destination.Splash as NavKey)
     val currentDestination = backStack.last()
     val mediaController by musicController.mediaController
     val isMobile = true
@@ -82,8 +83,12 @@ fun MusicXApp(
 
     Scaffold(
         bottomBar = {
+            val showBottomBar = isMobile && 
+                    currentDestination !is Destination.NowPlaying && 
+                    currentDestination !is Destination.Splash
+            
             AnimatedVisibility(
-                visible = isMobile && (currentDestination !is Destination.NowPlaying),
+                visible = showBottomBar,
                 enter = slideInVertically { it },
                 exit = slideOutVertically { it }
             ) {
@@ -212,6 +217,11 @@ fun MusicXApp(
                                     onBack = { popBackStack() }
                                 )
                             }
+                        }
+                        is Destination.Splash -> NavEntry(destination) {
+                            SplashScreen(onSplashFinished = {
+                                navigateTopLevel(Destination.Songs)
+                            })
                         }
                     }
                 }
