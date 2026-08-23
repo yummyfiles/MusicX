@@ -18,12 +18,12 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun SplashScreen(onSplashFinished: () -> Unit) {
-    // parse paths once lol
+    // parse paths once
     val pathsWithLengths = remember {
         SplashScreenPaths.providePaths()
     }
     
-    // logic to get the absolute tight bounds fr
+    // get the absolute tight bounds
     val bounds = remember {
         SplashScreenPaths.provideBounds()
     }
@@ -32,13 +32,13 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
     val fillAlpha = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        // tracing the outlines fr fr lol
+        // tracing the outlines
         traceProgress.animateTo(
             targetValue = 1f,
             animationSpec = tween(durationMillis = 2600, easing = LinearEasing)
         )
         
-        // filling the colors tbh
+        // filling the colors
         fillAlpha.animateTo(
             targetValue = 1f,
             animationSpec = tween(durationMillis = 1000)

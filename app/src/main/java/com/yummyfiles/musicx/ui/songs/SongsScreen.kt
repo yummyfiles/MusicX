@@ -68,7 +68,7 @@ fun SongsScreen(
         }
     }
     
-    // keeping tabs on what's playing fr
+    // keep track of what's playing
     var currentMediaId by remember { mutableStateOf<String?>(null) }
     
     LaunchedEffect(mediaController, mediaController?.currentMediaItem) {

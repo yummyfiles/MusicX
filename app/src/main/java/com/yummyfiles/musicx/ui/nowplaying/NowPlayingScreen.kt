@@ -23,8 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -87,7 +90,7 @@ fun NowPlayingScreen(
     val hasSyncedLyrics = syncedLyrics.isNotEmpty()
     val showLyricsInPlayer = generalSettings.showLyricsInPlayer
 
-    // checking which lyric line is vibing right now lol
+    // determine which lyric line is currently active
     val activeLyricsIndex = remember {
         derivedStateOf {
             val predictionOffset = 150L
@@ -121,7 +124,7 @@ fun NowPlayingScreen(
         }
     }
 
-    // tracking the time fr
+    // tracking the time
     LaunchedEffect(isPlaying) {
         if (isPlaying && (mediaController != null)) {
             while (true) {
@@ -225,7 +228,7 @@ fun NowPlayingScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // switching between art and lyrics is a whole mood
+            // switching between art and lyrics
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -322,7 +325,7 @@ fun NowPlayingScreen(
                 }
             }
 
-            // the main controls area tbh
+            // main controls
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -356,7 +359,7 @@ fun NowPlayingScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // seek bar doing its thing lol
+                // seek bar
                 SeekBarSection(
                     progressFraction = progressFraction,
                     formattedPosition = formattedPosition,
@@ -367,7 +370,7 @@ fun NowPlayingScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // button vibes
+                // button controls
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -496,21 +499,24 @@ fun SyncedLyricsView(
     val density = LocalDensity.current
     var listHeightPx by remember { mutableIntStateOf(0) }
 
-    // keep the active lyric in the center fr
+    // keep the active lyric in the center
     LaunchedEffect(activeIndex, lines) {
         if (lines.isNotEmpty() && enableSync) {
             // wait for the list to finish vibing
             snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }
                 .first { it }
-            // okay we ready to scroll now lol
+            // wait for the list to be ready
             val lineHeightPx = with(density) {
                 val fontSize = if (biggerText) 22.sp else 18.sp
                 fontSize.toPx() * 1.5f + 24.dp.toPx()
             }.toInt()
-            val contentPaddingPx = with(density) { 80.dp.toPx() * 2 }
-            val visibleHeightPx = (listHeightPx - contentPaddingPx).coerceAtLeast(0f)
-            val targetOffset = ((visibleHeightPx - lineHeightPx) / 2).coerceAtLeast(0f)
-            listState.scrollToItem(activeIndex, scrollOffset = targetOffset.toInt())
+            val targetOffset = (listHeightPx - lineHeightPx) / 2
+            
+            // animate the scroll for a smooth transition
+            listState.animateScrollToItem(
+                index = activeIndex,
+                scrollOffset = -targetOffset
+            )
         }
     }
 
@@ -522,6 +528,19 @@ fun SyncedLyricsView(
             .clip(RoundedCornerShape(24.dp))
             .background(MusicXTheme.colors.surfaceVariant.copy(alpha = 0.5f))
             .padding(vertical = 16.dp)
+            .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+            .drawWithContent {
+                drawContent()
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.2f to Color.Black,
+                        0.8f to Color.Black,
+                        1f to Color.Transparent
+                    ),
+                    blendMode = BlendMode.DstIn
+                )
+            }
     ) {
         LazyColumn(
             state = listState,
@@ -535,15 +554,15 @@ fun SyncedLyricsView(
                 val isActive = index == activeIndex
                 val color by animateColorAsState(
                     targetValue = if (isActive) MusicXTheme.colors.lyricsActive else MusicXTheme.colors.lyricsInactive,
-                    animationSpec = tween(200)
+                    animationSpec = tween(800)
                 )
                 val scale by animateFloatAsState(
-                    targetValue = if (isActive && enableSync) 1.15f else 1f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
+                    targetValue = if (isActive && enableSync) 1.1f else 1f,
+                    animationSpec = tween(800, easing = FastOutSlowInEasing)
                 )
                 val alpha by animateFloatAsState(
-                    targetValue = if (isActive) 1f else 0.4f,
-                    animationSpec = tween(200)
+                    targetValue = if (isActive) 1f else 0.3f,
+                    animationSpec = tween(800)
                 )
 
                 Text(

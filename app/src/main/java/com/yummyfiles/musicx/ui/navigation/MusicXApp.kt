@@ -42,7 +42,7 @@ fun MusicXApp(
     musicController: MusicController?,
     onRequestPermissions: () -> Unit,
 ) {
-    // Start permission check and data loading in parallel with splash fr
+    // Start permission check and data loading in parallel with splash
     LaunchedEffect(Unit) {
         onRequestPermissions()
     }
@@ -239,7 +239,7 @@ fun RowScope.NavigationItem(
     NavigationBarItem(
         selected = selected,
         onClick = onClick,
-        alwaysShowLabel = true, // need to see the labels lol
+        alwaysShowLabel = true, // need to see the labels
         icon = { Icon(icon, contentDescription = label) },
         label = { 
             Text(
@@ -247,7 +247,7 @@ fun RowScope.NavigationItem(
                 maxLines = 1,
                 overflow = TextOverflow.Visible,
                 softWrap = false,
-                fontSize = 10.sp, // smol text to fit the vibe fr
+                fontSize = 10.sp, // small text to fit
                 color = if (selected) MusicXTheme.colors.navActive else MusicXTheme.colors.navInactive
             ) 
         },

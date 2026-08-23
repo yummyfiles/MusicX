@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Immutable
 @Serializable
 data class ThemeState(
-    // backdrops for the aesthetics lol
+    // Background colors
     val primaryBackground: Long = 0xFF000000,
     val secondaryBackground: Long = 0xFF000000,
     val surface: Long = 0xFF000000,
@@ -19,28 +19,28 @@ data class ThemeState(
     val sidebarBackground: Long = 0xFF000000,
     val drawerBackground: Long = 0xFF000000,
 
-    // words and stuff fr
+    // Text colors
     val primaryText: Long = 0xFFFFFFFF,
     val secondaryText: Long = 0xFFB0B0B0,
     val tertiaryText: Long = 0xFF808080,
     val disabledText: Long = 0xFF606060,
     val inverseText: Long = 0xFF000000,
 
-    // lines but make it edgy lol
+    // Border and divider colors
     val primaryBorder: Long = 0xFFFFFFFF,
     val secondaryBorder: Long = 0xFF404040,
     val divider: Long = 0xFF202020,
     val outline: Long = 0xFFFFFFFF,
     val outlineVariant: Long = 0xFF404040,
 
-    // pop of color lowkey
+    // Accent colors
     val primaryAccent: Long = 0xFFFFFFFF,
     val secondaryAccent: Long = 0xFFE0E0E0,
     val mutedAccent: Long = 0xFF808080,
     val activeAccent: Long = 0xFFFFFFFF,
     val inactiveAccent: Long = 0xFF404040,
 
-    // clicky things tbh
+    // Button colors
     val buttonBackground: Long = 0xFFFFFFFF,
     val buttonOutline: Long = 0xFFFFFFFF,
     val buttonHover: Long = 0xFFE0E0E0,
@@ -48,32 +48,32 @@ data class ThemeState(
     val buttonDisabled: Long = 0xFF404040,
     val buttonText: Long = 0xFF000000,
 
-    // smol pictures lol
+    // Icon colors
     val iconPrimary: Long = 0xFFFFFFFF,
     val iconSecondary: Long = 0xFFB0B0B0,
     val iconDisabled: Long = 0xFF404040,
     val iconActive: Long = 0xFFFFFFFF,
 
-    // sliding into the dms... wait no lol
+    // Slider and progress colors
     val sliderActive: Long = 0xFFFFFFFF,
     val sliderInactive: Long = 0xFF404040,
     val sliderThumb: Long = 0xFFFFFFFF,
     val progressBar: Long = 0xFFFFFFFF,
     val progressBackground: Long = 0xFF404040,
 
-    // switch it up fr
+    // Toggle colors
     val toggleActive: Long = 0xFFFFFFFF,
     val toggleInactive: Long = 0xFF404040,
     val toggleThumb: Long = 0xFFFFFFFF,
 
-    // typing zone bruh
+    // Input colors
     val inputBackground: Long = 0xFF121212,
     val inputBorder: Long = 0xFF404040,
     val inputFocusedBorder: Long = 0xFFFFFFFF,
     val inputText: Long = 0xFFFFFFFF,
     val inputHint: Long = 0xFF808080,
 
-    // the bits and pieces lol
+    // Other UI component colors
     val scrollbar: Long = 0xFF404040,
     val scrollbarThumb: Long = 0xFF808080,
     val playButton: Long = 0xFFFFFFFF,
@@ -83,7 +83,7 @@ data class ThemeState(
     val shuffleActive: Long = 0xFFFFFFFF,
     val repeatActive: Long = 0xFFFFFFFF,
 
-    // random stuff fr
+    // Miscellaneous colors
     val notificationBackground: Long = 0xFF000000,
     val notificationText: Long = 0xFFFFFFFF,
     val splashBackground: Long = 0xFF000000,
