@@ -35,7 +35,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
         // tracing the outlines fr fr lol
         traceProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 2500, easing = LinearEasing)
+            animationSpec = tween(durationMillis = 2600, easing = LinearEasing)
         )
         
         // filling the colors tbh
