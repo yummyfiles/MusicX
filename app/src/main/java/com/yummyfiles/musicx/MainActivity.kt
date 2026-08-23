@@ -22,10 +22,15 @@ import com.yummyfiles.musicx.ui.navigation.MusicXApp
 import com.yummyfiles.musicx.ui.settings.SettingsViewModel
 import com.yummyfiles.musicx.ui.songs.SongsViewModel
 import com.yummyfiles.musicx.ui.theme.MusicXTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.runtime.*
+import com.yummyfiles.musicx.ui.splash.SplashScreen
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var musicController: MusicController
+    private var musicController: MusicController? = null
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -54,21 +59,33 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
-        Log.d("MusicX", "MainActivity onCreate")
-        
-        musicController = MusicController(this)
-        
         enableEdgeToEdge()
-        
-        checkAndRequestPermissions()
 
+        // set content ASAP so the splash screen can start vibing fr
         setContent {
-            val themeState by settingsViewModel.themeState.collectAsState()
+            var showMainApp by remember { mutableStateOf(false) }
 
-            MusicXTheme(themeState = themeState) {
-                MusicXApp(songsViewModel, settingsViewModel, musicController)
+            if (!showMainApp) {
+                // Splash screen shows immediately, no theme collection delay lol
+                SplashScreen(onSplashFinished = { showMainApp = true })
+            } else {
+                val themeState by settingsViewModel.themeState.collectAsState()
+                MusicXTheme(themeState = themeState) {
+                    MusicXApp(
+                        songsViewModel = songsViewModel,
+                        settingsViewModel = settingsViewModel,
+                        musicController = musicController,
+                        onRequestPermissions = { checkAndRequestPermissions() }
+                    )
+                }
             }
+        }
+
+        // Initialize music controller in background so it doesn't block startup vibe lol
+        lifecycleScope.launch {
+            musicController = MusicController(this@MainActivity)
         }
     }
 
@@ -94,9 +111,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         Log.d("MusicX", "MainActivity onDestroy")
-        if (::musicController.isInitialized) {
-            musicController.release()
-        }
+        musicController?.release()
         super.onDestroy()
     }
 }

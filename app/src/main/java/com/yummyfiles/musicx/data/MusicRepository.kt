@@ -23,10 +23,10 @@ import androidx.core.net.toUri
 
 @Suppress("UNUSED_PARAMETER", "RedundantSuspendModifier")
 class MusicRepository(private val context: Context) {
-    private val database = MusicDatabase.getDatabase(context)
-    private val playlistDao = database.playlistDao()
-    private val favoriteDao = database.favoriteDao()
-    private val lyricDao = database.lyricDao()
+    private val database by lazy { MusicDatabase.getDatabase(context) }
+    private val playlistDao by lazy { database.playlistDao() }
+    private val favoriteDao by lazy { database.favoriteDao() }
+    private val lyricDao by lazy { database.lyricDao() }
 
     private val json = Json { ignoreUnknownKeys = true }
 

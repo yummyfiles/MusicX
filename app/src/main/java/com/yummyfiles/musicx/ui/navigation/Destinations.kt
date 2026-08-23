@@ -23,7 +23,4 @@ sealed interface Destination : NavKey {
     
     @Serializable
     data object About : Destination
-
-    @Serializable
-    data object Splash : Destination
 }

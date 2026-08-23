@@ -7,5 +7,9 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="Theme.MusicX.Starting" parent="Theme.MusicX" />
+    <style name="Theme.MusicX.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/musicx_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.MusicX</item>
+    </style>
 </resources>

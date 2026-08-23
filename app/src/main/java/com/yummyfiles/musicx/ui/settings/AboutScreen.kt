@@ -129,10 +129,11 @@ fun AboutScreen(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(32.dp))
             
             Text(
-                text = "© 2026 YUMMYFILES // DEV",
-                fontSize = 12.sp,
-                color = MusicXTheme.colors.tertiaryText,
-                modifier = Modifier.padding(vertical = 16.dp)
+                text = "Made With ♡ by me!",
+                fontSize = 14.sp,
+                color = MusicXTheme.colors.primaryAccent,
+                modifier = Modifier.padding(vertical = 16.dp),
+                fontWeight = FontWeight.Bold
             )
         }
     }

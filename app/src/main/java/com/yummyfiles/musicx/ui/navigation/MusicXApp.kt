@@ -3,6 +3,7 @@ package com.yummyfiles.musicx.ui.navigation
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -38,11 +39,16 @@ import com.yummyfiles.musicx.ui.splash.SplashScreen
 fun MusicXApp(
     songsViewModel: SongsViewModel,
     settingsViewModel: SettingsViewModel,
-    musicController: MusicController,
+    musicController: MusicController?,
+    onRequestPermissions: () -> Unit,
 ) {
-    val backStack = rememberNavBackStack(Destination.Splash as NavKey)
+    // Start permission check and data loading in parallel with splash fr
+    LaunchedEffect(Unit) {
+        onRequestPermissions()
+    }
+    val backStack = rememberNavBackStack(Destination.Songs as NavKey)
     val currentDestination = backStack.last()
-    val mediaController by musicController.mediaController
+    val mediaController = musicController?.mediaController?.value
     val isMobile = true
 
     fun popBackStack() {
@@ -83,9 +89,7 @@ fun MusicXApp(
 
     Scaffold(
         bottomBar = {
-            val showBottomBar = isMobile && 
-                    currentDestination !is Destination.NowPlaying && 
-                    currentDestination !is Destination.Splash
+            val showBottomBar = isMobile && currentDestination !is Destination.NowPlaying
             
             AnimatedVisibility(
                 visible = showBottomBar,
@@ -100,7 +104,7 @@ fun MusicXApp(
                     NavigationBar(
                         containerColor = MusicXTheme.colors.bottomBar,
                         tonalElevation = 0.dp,
-                        windowInsets = WindowInsets.navigationBars // keep the labels safe from the nav bar bruh
+                        windowInsets = WindowInsets.navigationBars
                     ) {
                         NavigationItem(
                             selected = currentDestination is Destination.Songs,
@@ -217,11 +221,6 @@ fun MusicXApp(
                                     onBack = { popBackStack() }
                                 )
                             }
-                        }
-                        is Destination.Splash -> NavEntry(destination) {
-                            SplashScreen(onSplashFinished = {
-                                navigateTopLevel(Destination.Songs)
-                            })
                         }
                     }
                 }
