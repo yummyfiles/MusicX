@@ -13,8 +13,8 @@ android {
         applicationId = "com.yummyfiles.musicx"
         minSdk = 24
         targetSdk = 37
-        versionCode = 5
-        versionName = "2.0.4"
+        versionCode = 6
+        versionName = "2.0.5"
     }
 
     signingConfigs {
