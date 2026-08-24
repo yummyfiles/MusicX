@@ -13,7 +13,7 @@ android {
         applicationId = "com.yummyfiles.musicx"
         minSdk = 24
         targetSdk = 37
-        versionCode = 11
+        versionCode = 9
         versionName = "2.0.8"
     }
 
@@ -32,7 +32,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
-            isShrinkResources = false
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

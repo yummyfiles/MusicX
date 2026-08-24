@@ -34,11 +34,14 @@
 -keep interface androidx.media3.** { *; }
 -dontwarn androidx.media3.**
 -keep class com.yummyfiles.musicx.playback.** { *; }
+-keep class com.google.android.exoplayer2.** { *; }
+-dontwarn com.google.android.exoplayer2.**
 
 # Keep Coil
 -keep class coil.** { *; }
 -keep interface coil.** { *; }
 -dontwarn coil.**
+-keep class com.google.common.util.concurrent.ListenableFuture { *; }
 
 # Keep Moshi
 -keep class com.squareup.moshi.** { *; }
