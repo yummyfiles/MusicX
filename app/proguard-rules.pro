@@ -20,17 +20,25 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# Keep Room entities
--keep class com.yummyfiles.musicx.data.local.entity.** { *; }
+# Keep Room components
+-keep class com.yummyfiles.musicx.data.** { *; }
+-keep @androidx.room.Entity class *
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Dao interface *
 
 # Keep data models
 -keep class com.yummyfiles.musicx.model.** { *; }
 
 # Keep Media3 components
 -keep class androidx.media3.** { *; }
+-keep interface androidx.media3.** { *; }
+-dontwarn androidx.media3.**
+-keep class com.yummyfiles.musicx.playback.** { *; }
 
 # Keep Coil
 -keep class coil.** { *; }
+-keep interface coil.** { *; }
+-dontwarn coil.**
 
 # Keep Moshi
 -keep class com.squareup.moshi.** { *; }
