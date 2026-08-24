@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -85,7 +86,7 @@ fun AboutScreen(onBack: () -> Unit) {
             )
 
             Text(
-                text = "Version 1.0.0",
+                text = "Version 2.0.6",
                 fontSize = 14.sp,
                 color = MusicXTheme.colors.secondaryText
             )
@@ -107,7 +108,7 @@ fun AboutScreen(onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AboutLink(
-                    icon = Icons.Rounded.Code,
+                    icon = ImageVector.vectorResource(id = com.yummyfiles.musicx.R.drawable.ic_github),
                     label = "Project",
                 ) {
                     uriHandler.openUri("https://github.com/MusicX")

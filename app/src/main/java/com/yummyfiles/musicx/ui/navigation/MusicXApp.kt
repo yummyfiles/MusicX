@@ -29,6 +29,8 @@ import com.yummyfiles.musicx.ui.search.SearchScreen
 import com.yummyfiles.musicx.ui.settings.SettingsViewModel
 import com.yummyfiles.musicx.ui.settings.SettingsScreen
 import com.yummyfiles.musicx.ui.settings.AboutScreen
+import com.yummyfiles.musicx.ui.settings.GeneralSettingsScreen
+import com.yummyfiles.musicx.ui.settings.CustomizationScreen
 import com.yummyfiles.musicx.ui.nowplaying.NowPlayingScreen
 import androidx.media3.common.MediaItem
 import com.yummyfiles.musicx.ui.theme.MusicXTheme
@@ -196,6 +198,18 @@ fun MusicXApp(
                         }
                         is Destination.About -> NavEntry(destination) {
                             AboutScreen(onBack = { popBackStack() })
+                        }
+                        is Destination.GeneralSettings -> NavEntry(destination) {
+                            GeneralSettingsScreen(
+                                viewModel = settingsViewModel,
+                                onBack = { popBackStack() }
+                            )
+                        }
+                        is Destination.Customization -> NavEntry(destination) {
+                            CustomizationScreen(
+                                viewModel = settingsViewModel,
+                                onBack = { popBackStack() }
+                            )
                         }
                         is Destination.NowPlaying -> NavEntry(destination) {
                             val songs by songsViewModel.songs.collectAsState()

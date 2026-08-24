@@ -38,6 +38,10 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
     val favoriteIds: StateFlow<List<Long>> = repository.getFavoriteIds()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val favoriteSongs: StateFlow<List<Song>> = kotlinx.coroutines.flow.combine(songs, favoriteIds) { allSongs, ids ->
+        allSongs.filter { ids.contains(it.id) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
         viewModelScope.launch {
             repository.getAllPlaylists().collect {

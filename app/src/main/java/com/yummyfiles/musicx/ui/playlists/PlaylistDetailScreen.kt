@@ -81,7 +81,8 @@ fun PlaylistDetailScreen(
                 items(playlistSongs, key = { it.mediaUri.toString() }) { song ->
                     SongItem(
                         song = song,
-                        onClick = { onSongClick(song) }
+                        onClick = { onSongClick(song) },
+                        onFavoriteClick = { viewModel.toggleFavorite(song.id, false) }
                     )
                 }
             }

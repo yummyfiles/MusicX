@@ -22,6 +22,8 @@ import com.yummyfiles.musicx.ui.theme.MusicXTheme
 fun SettingsScreen(onNavigate: (Destination) -> Unit) {
     val settingsItems = remember {
         listOf(
+            SettingsCategory("General", Icons.Rounded.Settings, Destination.GeneralSettings),
+            SettingsCategory("Customization", Icons.Rounded.Palette, Destination.Customization),
             SettingsCategory("About", Icons.Rounded.Info, Destination.About)
         )
     }
