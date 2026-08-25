@@ -13,7 +13,7 @@ android {
         applicationId = "com.yummyfiles.musicx"
         minSdk = 24
         targetSdk = 37
-        versionCode = 26
+        versionCode = 27
         versionName = "2.0.2"
     }
 
