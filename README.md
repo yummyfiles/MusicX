@@ -195,7 +195,7 @@ Grab the latest APK from GitHub.
 If you like the project and wanna help me keep working on it, you can support it through Ko-fi.
 
 <div align="center">
-  <a href="https://ko-fi.com"><img src="https://img.shields.io/badge/Support%20me%20on%20Ko--fi-4688F1?style=for-the-badge&logo=kofi&logoColor=white" alt="Support me on Ko-fi"></a>
+  <a href="https://ko-fi.com/yummyfiles"><img src="https://img.shields.io/badge/Support%20me%20on%20Ko--fi-4688F1?style=for-the-badge&logo=kofi&logoColor=white" alt="Support me on Ko-fi"></a>
 </div>
 
 ---
