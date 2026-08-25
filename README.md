@@ -1,9 +1,6 @@
 <div align="center">
 
-# &lt; MusicX &gt;
-
-### **MUSICX**
-**Offline music. No nonsense.**
+<a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=share+tech+mono&size=35&pause=1000&color=F7F7F7&center=true&vCenter=true&width=435&lines=%3C+MusicX+%3E;Offline+music+player;No+ads;FOSS;Open+Source;Minimal" alt="Typing SVG" /></a>
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/LATEST-v2.0.1-222222?style=flat-square" alt="Latest Version"></a>
