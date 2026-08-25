@@ -50,7 +50,11 @@ fun MusicXApp(
     }
     val backStack = rememberNavBackStack(Destination.Songs as NavKey)
     val currentDestination = backStack.last()
-    val mediaController = musicController?.mediaController?.value
+    
+    // Safety check: ensure controller exists before state collection
+    val mediaController = remember(musicController?.mediaController?.value) {
+        musicController?.mediaController?.value
+    }
     val isMobile = true
 
     fun popBackStack() {

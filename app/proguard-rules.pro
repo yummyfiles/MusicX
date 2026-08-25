@@ -20,6 +20,22 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
+# General kotlinx.serialization rules
+-keepattributes *Annotation*, InnerClasses
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class kotlinx.serialization.json.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-keep,includedescriptorclasses class **$$serializer { *; }
+-keepclassmembers class * {
+    *** Companion;
+}
+-keepclasseswithmembers class * {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
 # Keep Room components
 -keep class com.yummyfiles.musicx.data.** { *; }
 -keep @androidx.room.Entity class *

@@ -188,7 +188,7 @@ private fun AboutLink(
                 text = label,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = MusicXTheme.colors.primaryText
+                color = MusicXTheme.colors.primaryAccent
             )
         }
     }

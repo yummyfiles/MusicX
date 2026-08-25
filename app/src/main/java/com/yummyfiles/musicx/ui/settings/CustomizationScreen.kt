@@ -55,7 +55,25 @@ fun CustomizationScreen(
                 AccentColorPicker(
                     selectedColor = themeState.primaryAccent,
                     onColorSelected = { color ->
-                        viewModel.updateTheme { it.copy(primaryAccent = color) }
+                        viewModel.updateTheme { 
+                            it.copy(
+                                primaryAccent = color,
+                                activeAccent = color,
+                                playButton = color,
+                                pauseButton = color,
+                                progressBar = color,
+                                sliderActive = color,
+                                sliderThumb = color,
+                                navActive = color,
+                                lyricsActive = color,
+                                buttonBackground = color,
+                                buttonOutline = color,
+                                shuffleActive = color,
+                                repeatActive = color,
+                                nextButton = color,
+                                previousButton = color
+                            )
+                        }
                     }
                 )
             }

@@ -195,7 +195,7 @@ fun MiniPlayer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(2.dp),
-                color = MusicXTheme.colors.primaryAccent,
+                color = MusicXTheme.colors.progressBar,
                 trackColor = Color.Transparent
             )
         }

@@ -385,7 +385,7 @@ fun NowPlayingScreen(
                             Icon(
                                 Icons.Rounded.Shuffle,
                                 contentDescription = "Shuffle",
-                                tint = if (shuffleEnabled) Color.White else Color.Gray
+                                tint = if (shuffleEnabled) MusicXTheme.colors.shuffleActive else Color.Gray
                             )
                         }
 
@@ -399,7 +399,7 @@ fun NowPlayingScreen(
                             Icon(
                                 if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                                 contentDescription = "Favorite",
-                                tint = if (isFavorite) Color.White else MusicXTheme.colors.iconPrimary
+                                tint = if (isFavorite) MusicXTheme.colors.primaryAccent else MusicXTheme.colors.iconPrimary
                             )
                         }
 
@@ -419,7 +419,7 @@ fun NowPlayingScreen(
                                     else -> Icons.Rounded.Repeat
                                 },
                                 contentDescription = "Repeat",
-                                tint = if (repeatMode != Player.REPEAT_MODE_OFF) Color.White else Color.Gray
+                                tint = if (repeatMode != Player.REPEAT_MODE_OFF) MusicXTheme.colors.repeatActive else Color.Gray
                             )
                         }
                     }
@@ -459,9 +459,63 @@ fun NowPlayingScreen(
                             Icon(Icons.Rounded.SkipNext, contentDescription = "Next", modifier = Modifier.size(36.dp), tint = MusicXTheme.colors.nextButton)
                         }
                     }
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    VolumeSection(mediaController = mediaController)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun VolumeSection(mediaController: MediaController?) {
+    var volume by remember { mutableFloatStateOf(0.5f) }
+    
+    // Attempt to sync with device volume if possible
+    LaunchedEffect(mediaController) {
+        mediaController?.let {
+            val maxVol = it.deviceInfo.maxVolume
+            if (maxVol > 0) {
+                volume = it.deviceVolume.toFloat() / maxVol
+            }
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (volume > 0) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeOff,
+            contentDescription = "Volume",
+            tint = MusicXTheme.colors.iconSecondary,
+            modifier = Modifier.size(20.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Slider(
+            value = volume,
+            onValueChange = { 
+                volume = it
+                mediaController?.let { mc ->
+                    val maxVol = mc.deviceInfo.maxVolume
+                    if (maxVol > 0) {
+                        mc.setDeviceVolume((it * maxVol).toInt())
+                    }
+                }
+            },
+            modifier = Modifier.weight(1f),
+            colors = SliderDefaults.colors(
+                thumbColor = MusicXTheme.colors.sliderThumb,
+                activeTrackColor = MusicXTheme.colors.sliderActive,
+                inactiveTrackColor = MusicXTheme.colors.sliderInactive
+            )
+        )
     }
 }
 
@@ -737,7 +791,7 @@ private fun SeekBarSection(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(displayPosition, color = MusicXTheme.colors.secondaryText, fontSize = 12.sp)
+            Text(displayPosition, color = MusicXTheme.colors.primaryAccent, fontSize = 12.sp)
             Text(formattedDuration, color = MusicXTheme.colors.secondaryText, fontSize = 12.sp)
         }
     }
