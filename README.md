@@ -3,21 +3,21 @@
 <a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=share+tech+mono&size=35&pause=1000&color=F7F7F7&center=true&vCenter=true&width=435&lines=%3C+MusicX+%3E;Offline+music+player;No+ads;FOSS;Open+Source;Minimal" alt="Typing SVG" /></a>
 
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/LATEST-v2.0.1-222222?style=flat-square" alt="Latest Version"></a>
-  <a href="#"><img src="https://img.shields.io/badge/DOWNLOADS-0-222222?style=flat-square" alt="Downloads"></a>
-  <a href="#"><img src="https://img.shields.io/badge/STARS-1-222222?style=flat-square" alt="Stars"></a>
+  <a href="https://github.com/yummyfiles/MusicX/releases/latest"><img src="https://img.shields.io/badge/LATEST-v2.0.1-222222?style=flat-square" alt="Latest Version"></a>
+  <a href="https://github.com/yummyfiles/MusicX/releases"><img src="https://img.shields.io/badge/DOWNLOADS-0-222222?style=flat-square" alt="Downloads"></a>
+  <a href="https://github.com/yummyfiles/MusicX/stargazers"><img src="https://img.shields.io/badge/STARS-1-222222?style=flat-square" alt="Stars"></a>
 </p>
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/ANDROID-black?style=flat-square&logo=android" alt="Android"></a>
   <a href="#"><img src="https://img.shields.io/badge/KOTLIN-black?style=flat-square&logo=kotlin" alt="Kotlin"></a>
   <a href="#"><img src="https://img.shields.io/badge/JETPACK%20COMPOSE-black?style=flat-square&logo=jetpackcompose" alt="Jetpack Compose"></a>
-  <a href="#"><img src="https://img.shields.io/badge/LICENSE-GPL--3.0-black?style=flat-square" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/LICENSE-GPL--3.0-black?style=flat-square" alt="License"></a>
 </p>
 
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/↓%20DOWNLOAD%20APK-222222?style=flat-square" alt="Download APK"></a>
-  <a href="#"><img src="https://img.shields.io/badge/→%20PROJECT%20HUB-222222?style=flat-square" alt="Project Hub"></a>
+  <a href="https://github.com/yummyfiles/MusicX/releases/latest"><img src="https://img.shields.io/badge/↓%20DOWNLOAD%20APK-222222?style=flat-square" alt="Download APK"></a>
+  <a href="https://github.com/yummyfiles/MusicX"><img src="https://img.shields.io/badge/→%20PROJECT%20HUB-222222?style=flat-square" alt="Project Hub"></a>
 </p>
 
 **No ads · No subscriptions · No accounts · No paywalls**
@@ -169,14 +169,14 @@ Just your music.
 ## ❯ DOWNLOAD
 
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/↓%20GET%20MUSICX-222222?style=flat-square" alt="Get MusicX"></a>
+  <a href="https://github.com/yummyfiles/MusicX/releases/latest"><img src="https://img.shields.io/badge/↓%20GET%20MUSICX-222222?style=flat-square" alt="Get MusicX"></a>
 </p>
 
 <div align="center">
 
-Grab the latest APK from GitHub.
+Grab the latest APK directly from GitHub.
 
-[View all releases →](#)
+[View all releases →](https://github.com/yummyfiles/MusicX/releases)
 
 </div>
 
@@ -186,7 +186,7 @@ Grab the latest APK from GitHub.
 
 <p align="left">
   <img src="https://img.shields.io/badge/README-black?style=flat-square" alt="Readme">
-  <img src="https://img.shields.io/badge/GPL--3.0%20license-black?style=flat-square" alt="License">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/GPL--3.0%20license-black?style=flat-square" alt="License"></a>
 </p>
 
 If you like the project and wanna help me keep working on it, you can support it through Ko-fi.
@@ -200,9 +200,9 @@ If you like the project and wanna help me keep working on it, you can support it
 ## ❯ MORE MUSICX STUFF
 
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/PROJECT%20HUB-black?style=flat-square" alt="Project Hub"></a>
-  <a href="#"><img src="https://img.shields.io/badge/ISSUES-black?style=flat-square" alt="Issues"></a>
-  <a href="#"><img src="https://img.shields.io/badge/DISCUSSIONS-black?style=flat-square" alt="Discussions"></a>
+  <a href="https://github.com/yummyfiles/MusicX"><img src="https://img.shields.io/badge/PROJECT%20HUB-black?style=flat-square" alt="Project Hub"></a>
+  <a href="https://github.com/yummyfiles/MusicX/issues"><img src="https://img.shields.io/badge/ISSUES-black?style=flat-square" alt="Issues"></a>
+  <a href="https://github.com/yummyfiles/MusicX/discussions"><img src="https://img.shields.io/badge/DISCUSSIONS-black?style=flat-square" alt="Discussions"></a>
 </p>
 
 ---
