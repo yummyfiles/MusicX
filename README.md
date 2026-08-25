@@ -152,7 +152,7 @@ This isn't some locked-in corporate roadmap or anything. Stuff can obviously cha
 ## ❯ THE PLAYER
 
 <p align="center">
-  <b>ı|||ıilili|iil|iili||li|i||ilii|li||ilii|i||ilii|iili|li|ili|</b>
+  <img src="visualizer.svg" alt="Visualizer" width="600" />
 </p>
 
 <div align="center">
