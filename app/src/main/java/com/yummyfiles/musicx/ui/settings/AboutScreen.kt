@@ -82,7 +82,6 @@ fun AboutScreen(onBack: () -> Unit) {
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = MusicXTheme.colors.primaryText,
-                fontFamily = com.yummyfiles.musicx.ui.theme.ShareTechMono
             )
 
             Text(

@@ -72,7 +72,12 @@ class MainActivity : ComponentActivity() {
                 SplashScreen(onSplashFinished = { showMainApp = true })
             } else {
                 val themeState by settingsViewModel.themeState.collectAsState()
-                MusicXTheme(themeState = themeState) {
+                val generalSettings by settingsViewModel.generalSettings.collectAsState()
+                
+                MusicXTheme(
+                    themeState = themeState,
+                    terminalMode = generalSettings.terminalMode
+                ) {
                     MusicXApp(
                         songsViewModel = songsViewModel,
                         settingsViewModel = settingsViewModel,

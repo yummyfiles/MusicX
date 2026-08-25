@@ -207,7 +207,6 @@ fun NowPlayingScreen(
                     color = MusicXTheme.colors.primaryText,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = com.yummyfiles.musicx.ui.theme.ShareTechMono
                 )
 
                 IconButton(onClick = { showLyrics = !showLyrics }) {

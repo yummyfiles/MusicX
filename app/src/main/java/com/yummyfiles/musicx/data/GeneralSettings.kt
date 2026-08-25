@@ -38,4 +38,7 @@ data class GeneralSettings(
     val loopVideos: Boolean = true,
     val highQualityOnly: Boolean = false,
     val showSubtitles: Boolean = true,
+
+    // UI vibes
+    val terminalMode: Boolean = false,
 )

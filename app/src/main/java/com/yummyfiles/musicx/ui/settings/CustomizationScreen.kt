@@ -96,6 +96,14 @@ fun CustomizationScreen(
                         viewModel.updateGeneralSettings { it.copy(centerLyrics = checked) }
                     }
                 )
+                SwitchSetting(
+                    title = "Terminal Mode",
+                    description = "Use the classic monospace 'techy' look",
+                    checked = viewModel.generalSettings.collectAsState().value.terminalMode,
+                    onCheckedChange = { checked ->
+                        viewModel.updateGeneralSettings { it.copy(terminalMode = checked) }
+                    }
+                )
             }
             
             item {

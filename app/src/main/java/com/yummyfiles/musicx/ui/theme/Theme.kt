@@ -29,6 +29,7 @@ object MusicXTheme {
 @Composable
 fun MusicXTheme(
     themeState: ThemeState = ThemeState(),
+    terminalMode: Boolean = false,
     @Suppress("UNUSED_PARAMETER") darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
@@ -73,7 +74,7 @@ fun MusicXTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
+            typography = getTypography(terminalMode),
             content = content
         )
     }
