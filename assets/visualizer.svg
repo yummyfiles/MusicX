@@ -1,9 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 120" width="100%" height="auto" style="max-width: 600px; display: block; margin: 0 auto;">
   <style>
     .bar {
-      fill: currentColor;
+      fill: #000000;
       transform-origin: center;
       animation: pulse 0.5s ease-in-out infinite alternate;
+    }
+    @media (prefers-color-scheme: dark) {
+      .bar {
+        fill: #ffffff;
+      }
     }
     @keyframes pulse {
       0% { transform: scaleY(0.15); }
