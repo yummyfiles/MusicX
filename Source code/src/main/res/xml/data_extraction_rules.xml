@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><!-- extracting data is lowkey sus lol -->
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- gotta decide what to keep fr -->
+    </cloud-backup>
+    <!--
+    <device-transfer>
+        <include .../>
+        <exclude .../>
+    </device-transfer>
+    -->
+</data-extraction-rules>
