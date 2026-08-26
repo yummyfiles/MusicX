@@ -44,14 +44,14 @@ fun MusicXApp(
     musicController: MusicController?,
     onRequestPermissions: () -> Unit,
 ) {
-    // Start permission check and data loading in parallel with splash
+    // Getting permissions and loading data while the splash screen is doing its thing.
     LaunchedEffect(Unit) {
         onRequestPermissions()
     }
     val backStack = rememberNavBackStack(Destination.Songs as NavKey)
     val currentDestination = backStack.last()
     
-    // Safety check: ensure controller exists before state collection
+    // Just making sure the controller is there before we try to use it.
     val mediaController = remember(musicController?.mediaController?.value) {
         musicController?.mediaController?.value
     }
@@ -257,7 +257,7 @@ fun RowScope.NavigationItem(
     NavigationBarItem(
         selected = selected,
         onClick = onClick,
-        alwaysShowLabel = true, // need to see the labels
+        alwaysShowLabel = true, // Labels are helpful, let's keep 'em visible.
         icon = { Icon(icon, contentDescription = label) },
         label = { 
             Text(
@@ -265,7 +265,7 @@ fun RowScope.NavigationItem(
                 maxLines = 1,
                 overflow = TextOverflow.Visible,
                 softWrap = false,
-                fontSize = 10.sp, // small text to fit
+                fontSize = 10.sp, // Making the text a bit smaller so everything fits nicely.
                 color = if (selected) MusicXTheme.colors.navActive else MusicXTheme.colors.navInactive
             ) 
         },

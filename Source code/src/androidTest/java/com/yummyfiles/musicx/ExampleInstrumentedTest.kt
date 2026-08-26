@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 import org.junit.Assert.*
 
 /**
- * Instrumented test, which will execute on an Android device.
+ * Just a test that runs on a real device or emulator.
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
@@ -17,7 +17,7 @@ import org.junit.Assert.*
 class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
-        // Context of the app under test.
+        // Grabbing the context for the app we're testing.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.yummyfiles.musicx", appContext.packageName)
     }

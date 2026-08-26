@@ -45,7 +45,7 @@ fun MiniPlayer(
         label = "SmoothProgress",
     )
     
-    // tracking the progress bar
+    // Keeping the progress bar moving along.
     LaunchedEffect(isPlaying) {
         if (isPlaying && (mediaController != null)) {
             while (true) {
@@ -56,7 +56,7 @@ fun MiniPlayer(
         }
     }
 
-    // getting things ready
+    // Getting everything set up.
     LaunchedEffect(mediaController, mediaController?.currentMediaItem) {
         if (mediaController != null) {
             isPlaying = mediaController.isPlaying
@@ -189,7 +189,7 @@ fun MiniPlayer(
                 }
             }
             
-            // tiny progress bar at the bottom
+            // A little progress bar tucked at the bottom.
             LinearProgressIndicator(
                 progress = { animatedProgress },
                 modifier = Modifier

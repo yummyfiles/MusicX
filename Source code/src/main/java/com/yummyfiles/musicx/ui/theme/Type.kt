@@ -124,5 +124,5 @@ fun getTypography(terminalMode: Boolean): Typography {
     )
 }
 
-// Deprecated, use getTypography(terminalMode) instead
+// This one's old, use getTypography(terminalMode) now.
 val Typography = getTypography(true)

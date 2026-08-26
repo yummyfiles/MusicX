@@ -90,7 +90,7 @@ fun NowPlayingScreen(
     val hasSyncedLyrics = syncedLyrics.isNotEmpty()
     val showLyricsInPlayer = generalSettings.showLyricsInPlayer
 
-    // determine which lyric line is currently active
+    // Figuring out which line of the lyrics we're on right now.
     val activeLyricsIndex = remember {
         derivedStateOf {
             val predictionOffset = 150L
@@ -124,7 +124,7 @@ fun NowPlayingScreen(
         }
     }
 
-    // tracking the time
+    // Keeping an eye on the clock.
     LaunchedEffect(isPlaying) {
         if (isPlaying && (mediaController != null)) {
             while (true) {
@@ -227,7 +227,7 @@ fun NowPlayingScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // switching between art and lyrics
+            // Flipping between the album cover and the lyrics.
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -324,7 +324,7 @@ fun NowPlayingScreen(
                 }
             }
 
-            // main controls
+            // The big buttons you use most.
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -358,7 +358,7 @@ fun NowPlayingScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // seek bar
+                // That slider for skipping around in the song.
                 SeekBarSection(
                     progressFraction = progressFraction,
                     formattedPosition = formattedPosition,
@@ -369,7 +369,7 @@ fun NowPlayingScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // button controls
+                // All the other buttons.
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -472,7 +472,7 @@ fun NowPlayingScreen(
 private fun VolumeSection(mediaController: MediaController?) {
     var volume by remember { mutableFloatStateOf(0.5f) }
     
-    // Attempt to sync with device volume if possible
+    // Trying to get the volume to match what your phone says.
     LaunchedEffect(mediaController) {
         mediaController?.let {
             val maxVol = it.deviceInfo.maxVolume
@@ -552,20 +552,20 @@ fun SyncedLyricsView(
     val density = LocalDensity.current
     var listHeightPx by remember { mutableIntStateOf(0) }
 
-    // keep the active lyric in the center
+    // Making sure the line you're hearing stays front and center.
     LaunchedEffect(activeIndex, lines) {
         if (lines.isNotEmpty() && enableSync) {
-            // wait for the list to finish vibing
+            // Giving the list a moment to chill and settle.
             snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }
                 .first { it }
-            // wait for the list to be ready
+            // Just making sure everything's good to go.
             val lineHeightPx = with(density) {
                 val fontSize = if (biggerText) 22.sp else 18.sp
                 fontSize.toPx() * 1.5f + 24.dp.toPx()
             }.toInt()
             val targetOffset = (listHeightPx - lineHeightPx) / 2
             
-            // animate the scroll for a smooth transition
+            // Scrolling it smoothly so it doesn't just jump.
             listState.animateScrollToItem(
                 index = activeIndex,
                 scrollOffset = -targetOffset

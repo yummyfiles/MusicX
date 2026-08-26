@@ -5,7 +5,7 @@ import org.junit.Test
 import org.junit.Assert.*
 
 /**
- * Example local unit test, which will execute on the development machine (host).
+ * A simple test that runs on your computer, not the phone.
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */

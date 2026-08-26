@@ -63,12 +63,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // set content immediately so the splash screen can start
+        // Getting the app UI ready right away so the splash screen shows up.
         setContent {
             var showMainApp by remember { mutableStateOf(false) }
 
             if (!showMainApp) {
-                // Splash screen shows immediately
+                // Splash screen jumps in first.
                 SplashScreen(onSplashFinished = { showMainApp = true })
             } else {
                 val themeState by settingsViewModel.themeState.collectAsState()
@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Initialize music controller in background so it doesn't block startup
+        // Getting the music stuff ready in the background so we don't slow down the app opening.
         lifecycleScope.launch {
             musicController = MusicController(this@MainActivity)
         }

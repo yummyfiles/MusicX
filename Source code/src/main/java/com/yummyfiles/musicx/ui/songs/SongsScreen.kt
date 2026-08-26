@@ -73,7 +73,7 @@ fun SongsScreen(
         }
     }
     
-    // keep track of what's playing
+    // Keeping tabs on what's currently bumping.
     var currentMediaId by remember { mutableStateOf<String?>(null) }
     
     LaunchedEffect(mediaController, mediaController?.currentMediaItem) {
@@ -195,7 +195,7 @@ fun SongsScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Favorites section at the top
+                // Putting your favorites right where you can see 'em, at the top.
                 if (favoriteSongs.isNotEmpty()) {
                     item {
                         FavoritesSection(
@@ -278,7 +278,7 @@ fun FavoritesSection(
     onSongLongClick: (Song) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Section header
+        // The title for this part.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -300,7 +300,7 @@ fun FavoritesSection(
             )
         }
         
-        // Horizontal scrolling favorites
+        // A row of favorites you can swipe through.
         androidx.compose.foundation.lazy.LazyRow(
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp),
@@ -380,7 +380,7 @@ fun FavoriteSongCard(
         )
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
-            // Left side: Album Art / Placeholder in a colored box
+            // The left side has the album cover or a placeholder.
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -405,7 +405,7 @@ fun FavoriteSongCard(
                 }
             }
 
-            // Right side: Song Details
+            // The right side is for the song info.
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -435,7 +435,7 @@ fun FavoriteSongCard(
                     )
                 }
                 
-                // Favorite Button
+                // The heart button.
                 IconButton(
                     onClick = onFavoriteClick,
                     modifier = Modifier

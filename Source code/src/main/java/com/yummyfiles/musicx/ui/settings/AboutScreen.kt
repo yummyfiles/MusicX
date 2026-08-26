@@ -27,7 +27,7 @@ import com.yummyfiles.musicx.ui.theme.MusicXTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
-    // this app is built differently
+    // This app isn't like the others.
     Scaffold(
         topBar = {
             TopAppBar(
@@ -58,7 +58,7 @@ fun AboutScreen(onBack: () -> Unit) {
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // the logo
+            // Our cool logo.
             Box(
                 modifier = Modifier
                     .size(120.dp)

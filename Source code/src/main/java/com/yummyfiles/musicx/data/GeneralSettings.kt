@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GeneralSettings(
-    // playback settings
+    // Stuff related to playing music.
     val autoplayNext: Boolean = true,
     val jumpToNowPlaying: Boolean = false,
     val pauseOnDisconnect: Boolean = true,
@@ -12,33 +12,33 @@ data class GeneralSettings(
     val rememberPosition: Boolean = false,
     val fadeOnPlayPause: Boolean = true,
 
-    // library settings
+    // Settings for how the library works.
     val autoRefresh: Boolean = true,
     val excludeSmallFiles: Boolean = true,
     val preferEmbeddedArt: Boolean = true,
     val ignoreNoMedia: Boolean = false,
 
-    // audio settings
+    // Tweak how the sound comes out.
     val eqEnabled: Boolean = false,
     val bassBoostEnabled: Boolean = false,
     val surroundSoundEnabled: Boolean = false,
     val normalizationEnabled: Boolean = true,
     val smartGainEnabled: Boolean = false,
 
-    // lyrics settings
+    // How you want your lyrics to look.
     val showLyricsInPlayer: Boolean = true,
     val syncLyrics: Boolean = true,
     val romanizedLyrics: Boolean = false,
     val biggerLyrics: Boolean = false,
     val centerLyrics: Boolean = true,
 
-    // video settings
+    // For when you're watching videos.
     val hardwareAcceleration: Boolean = true,
     val autoplayVideos: Boolean = false,
     val loopVideos: Boolean = true,
     val highQualityOnly: Boolean = false,
     val showSubtitles: Boolean = true,
 
-    // UI vibes
+    // Changing up the look and feel.
     val terminalMode: Boolean = false,
 )

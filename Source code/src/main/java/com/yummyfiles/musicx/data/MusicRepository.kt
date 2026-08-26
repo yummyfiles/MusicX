@@ -76,16 +76,16 @@ class MusicRepository(private val context: Context) {
                 val albumId = cursor.getLong(albumIdColumn)
                 val path = cursor.getString(dataColumn)
 
-                // check database for cached lyrics
+                // Seeing if we've already saved the lyrics in our database.
                 var lyrics = lyricDao.getLyricsForSong(id)
 
-                // if no lyrics in DB, check local files
+                // If the database doesn't have them, let's look for an .lrc file nearby.
                 if (lyrics == null && path != null) {
                     try {
                         val lrcFile = java.io.File(path.substringBeforeLast(".") + ".lrc")
                         if (lrcFile.exists()) {
                             lyrics = lrcFile.readText()
-                            // cache it in the db
+                            // Save it to the database for later.
                             lyricDao.insertLyrics(LyricEntity(id, lyrics))
                         }
                     } catch (e: Exception) {
@@ -120,9 +120,9 @@ class MusicRepository(private val context: Context) {
         songs
     }
     suspend fun importSongs(uris: List<Uri>) {
-        // MediaStore handles most of this
-        // but we can force it if necessary
-        // rely on system scanner for now
+        // The system usually takes care of this.
+        // But we can give it a nudge if it's acting up.
+        // Just letting the system scanner do its thing for now.
     }
 
     fun getAllPlaylists(): Flow<List<Playlist>> {
@@ -171,8 +171,8 @@ class MusicRepository(private val context: Context) {
     }
 
     suspend fun updateMetadata(uri: String, title: String?, artist: String?, lyrics: String? = null) {
-        // Tag editing is complex, maybe later
-        // logging for now
+        // Editing tags is a bit of a headache, let's save that for another day.
+        // Just dropping a log for now.
         android.util.Log.d("MusicRepository", "Update metadata for $uri: $title, $artist")
         if (lyrics != null) {
             uri.substringAfterLast("/").toLongOrNull()?.let { songId ->
@@ -251,5 +251,5 @@ class MusicRepository(private val context: Context) {
             .filter { it !in setOf('|', '\\', '(', ')', '"', '[', ']') }
             .trim()
     }
-    suspend fun syncAllLyrics() { /* unimplemented */ }
+    suspend fun syncAllLyrics() { /* Haven't gotten around to this yet. */ }
 }
