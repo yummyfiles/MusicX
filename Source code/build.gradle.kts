@@ -12,9 +12,9 @@ android {
     defaultConfig {
         applicationId = "com.yummyfiles.musicx"
         minSdk = 24
-        targetSdk = 37
-        versionCode = 31
-        versionName = "2.0.2"
+        targetSdk = 35
+        versionCode = 32
+        versionName = "2.1.0"
     }
 
     signingConfigs {

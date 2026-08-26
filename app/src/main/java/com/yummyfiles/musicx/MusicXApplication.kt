@@ -9,7 +9,6 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
-import kotlin.system.exitProcess
 
 class MusicXApplication : Application(), ImageLoaderFactory {
 
@@ -18,7 +17,7 @@ class MusicXApplication : Application(), ImageLoaderFactory {
 
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             Log.e("MusicX_Crash", "CRITICAL CRASH in thread ${thread.name}", throwable)
-            exitProcess(1)
+            // Removed exitProcess(1) to avoid crash loops and allow system handling
         }
 
         createNotificationChannel()

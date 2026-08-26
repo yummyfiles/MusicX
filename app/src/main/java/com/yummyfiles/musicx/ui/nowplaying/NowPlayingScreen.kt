@@ -460,61 +460,9 @@ fun NowPlayingScreen(
                     }
                     
                     Spacer(modifier = Modifier.height(24.dp))
-                    
-                    VolumeSection(mediaController = mediaController)
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun VolumeSection(mediaController: MediaController?) {
-    var volume by remember { mutableFloatStateOf(0.5f) }
-    
-    // Attempt to sync with device volume if possible
-    LaunchedEffect(mediaController) {
-        mediaController?.let {
-            val maxVol = it.deviceInfo.maxVolume
-            if (maxVol > 0) {
-                volume = it.deviceVolume.toFloat() / maxVol
-            }
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = if (volume > 0) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeOff,
-            contentDescription = "Volume",
-            tint = MusicXTheme.colors.iconSecondary,
-            modifier = Modifier.size(20.dp)
-        )
-        
-        Spacer(modifier = Modifier.width(12.dp))
-        
-        Slider(
-            value = volume,
-            onValueChange = { 
-                volume = it
-                mediaController?.let { mc ->
-                    val maxVol = mc.deviceInfo.maxVolume
-                    if (maxVol > 0) {
-                        mc.setDeviceVolume((it * maxVol).toInt())
-                    }
-                }
-            },
-            modifier = Modifier.weight(1f),
-            colors = SliderDefaults.colors(
-                thumbColor = MusicXTheme.colors.sliderThumb,
-                activeTrackColor = MusicXTheme.colors.sliderActive,
-                inactiveTrackColor = MusicXTheme.colors.sliderInactive
-            )
-        )
     }
 }
 
