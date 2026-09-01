@@ -212,8 +212,6 @@ If you like the project and wanna help me keep working on it, you can support it
 ### **MUSICX**
 **Your music. Your library. Your device.**
 
-Made with Kotlin + Jetpack Compose by **YUMMYFILES**.
-
-© 2026 YUMMYFILES
+Made with Kotlin + Jetpack Compose by **YUMMYFILES // DEV**.
 
 </div>
