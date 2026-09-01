@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Notes
 import androidx.compose.material.icons.rounded.*
@@ -477,21 +478,41 @@ fun SyncedLyricsView(
     centerLyrics: Boolean = true
 ) {
     if (lines.isEmpty()) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(MusicXTheme.colors.surfaceVariant.copy(alpha = 0.5f))
                 .padding(16.dp),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = plainLyrics ?: "Looking for lyrics...",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MusicXTheme.colors.primaryText,
-                textAlign = TextAlign.Center
-            )
+            if (plainLyrics != null) {
+                Text(
+                    text = "Lyrics not synced",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MusicXTheme.colors.secondaryText,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+            
+            val scrollState = rememberScrollState()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState),
+                contentAlignment = if (centerLyrics) Alignment.TopCenter else Alignment.TopStart
+            ) {
+                Text(
+                    text = plainLyrics ?: "Looking for lyrics...",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = if (biggerText) 22.sp else 18.sp,
+                        lineHeight = if (biggerText) 30.sp else 26.sp
+                    ),
+                    color = MusicXTheme.colors.primaryText,
+                    textAlign = if (centerLyrics) TextAlign.Center else TextAlign.Start
+                )
+            }
         }
         return
     }
@@ -502,16 +523,19 @@ fun SyncedLyricsView(
 
     // keep the active lyric in the center
     LaunchedEffect(activeIndex, lines) {
-        if (lines.isNotEmpty() && enableSync) {
+        if (lines.isNotEmpty() && enableSync && listHeightPx > 0) {
             // wait for the list to finish vibing
             snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }
                 .first { it }
-            // wait for the list to be ready
-            val lineHeightPx = with(density) {
+            
+            // Calculate item height more accurately if possible, or use a reasonable estimate
+            val visibleItem = listState.layoutInfo.visibleItemsInfo.find { it.index == activeIndex }
+            val itemHeight = visibleItem?.size ?: with(density) {
                 val fontSize = if (biggerText) 22.sp else 18.sp
-                fontSize.toPx() * 1.5f + 24.dp.toPx()
-            }.toInt()
-            val targetOffset = (listHeightPx - lineHeightPx) / 2
+                (fontSize.toPx() * 1.5f + 24.dp.toPx()).toInt()
+            }
+            
+            val targetOffset = (listHeightPx - itemHeight) / 2
             
             // animate the scroll for a smooth transition
             listState.animateScrollToItem(
@@ -535,21 +559,23 @@ fun SyncedLyricsView(
                 drawRect(
                     brush = Brush.verticalGradient(
                         0f to Color.Transparent,
-                        0.2f to Color.Black,
-                        0.8f to Color.Black,
+                        0.15f to Color.Black,
+                        0.85f to Color.Black,
                         1f to Color.Transparent
                     ),
                     blendMode = BlendMode.DstIn
                 )
             }
     ) {
+        val verticalPadding = with(density) { (listHeightPx / 2).toDp() }
+        
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .onSizeChanged { listHeightPx = it.height },
             horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(vertical = 80.dp)
+            contentPadding = PaddingValues(vertical = if (listHeightPx > 0) verticalPadding else 100.dp)
         ) {
             itemsIndexed(lines, key = { _, line -> line.time }) { index, line ->
                 val isActive = index == activeIndex

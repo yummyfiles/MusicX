@@ -251,5 +251,27 @@ class MusicRepository(private val context: Context) {
             .filter { it !in setOf('|', '\\', '(', ')', '"', '[', ']') }
             .trim()
     }
-    suspend fun syncAllLyrics() { /* unimplemented */ }
+    private var isSyncing = false
+
+    suspend fun syncAllLyrics() = withContext(Dispatchers.IO) {
+        if (isSyncing) return@withContext
+        isSyncing = true
+        try {
+            val allSongs = fetchLocalSongs()
+            val songsNeedingLyrics = allSongs.filter { it.lyrics == null }
+            
+            android.util.Log.d("MusicRepository", "Starting background sync for ${songsNeedingLyrics.size} songs")
+            
+            songsNeedingLyrics.forEach { song ->
+                autoFetchLyrics(song)?.let { lyrics ->
+                    updateMetadata(song.mediaUri.toString(), song.title, song.artist, lyrics)
+                    android.util.Log.d("MusicRepository", "Synced lyrics for: ${song.title}")
+                }
+                kotlinx.coroutines.delay(1000) // Respectful delay
+            }
+        } finally {
+            isSyncing = false
+            android.util.Log.d("MusicRepository", "Background sync completed")
+        }
+    }
 }

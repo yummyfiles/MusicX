@@ -147,6 +147,9 @@ class SongsViewModel(private val repository: MusicRepository) : ViewModel() {
             if (lyrics != null) {
                 repository.updateMetadata(song.mediaUri.toString(), song.title, song.artist, lyrics)
                 loadSongs()
+                
+                // Once we find lyrics for one song, let's try to sync everything for offline use.
+                repository.syncAllLyrics()
             }
         }
     }
